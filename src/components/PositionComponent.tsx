@@ -29,10 +29,10 @@ export function PositionComponent() {
   };
 
   return (
-    <div>
+    <div style={{ height: "100%" }}>
       <div
         className="ag-theme-balham-dark"
-        style={{ width: "auto", height: 300 }}
+        style={{ width: "auto", height: "100%", minHeight: 300 }}
       >
         <AgGridReact rowData={rowData} onGridReady={onGridReady}>
           <AgGridColumn field="participant"></AgGridColumn>
