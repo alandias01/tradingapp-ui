@@ -10,6 +10,7 @@ import {
 import Color from "color";
 import { Level2DataComponent } from "./Level2DataComponent";
 import { PositionComponent } from "./PositionComponent";
+import { CreateOrder } from "./CreateOrder";
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
@@ -47,10 +48,10 @@ export function Main() {
             <Level2DataComponent />
           </Grid>
           <Grid item xs={12} sm={8}>
-            <Level2DataComponent />
-          </Grid>
-          <Grid item xs={12} sm="auto" className={classes.root}>
             <PositionComponent />
+          </Grid>
+          <Grid item xs={12} sm={4} className={classes.root}>
+            <CreateOrder />
           </Grid>
         </Grid>
       </div>
