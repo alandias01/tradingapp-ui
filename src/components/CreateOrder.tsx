@@ -1,8 +1,21 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardContent } from "@material-ui/core";
+import { Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button } from "@material-ui/core";
 import PositionService from "../services/PositionService";
 
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      '& > *': {
+        margin: theme.spacing(1),
+        width: '100%',
+      },
+    },
+  }),
+);
+
 export function CreateOrder() {
+  const classes = useStyles();
+
   const [sym, setSym] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
   const [price, setPrice] = useState<number>(1);
@@ -21,19 +34,12 @@ export function CreateOrder() {
       <Card square>
         <CardHeader subheader={"Create an order"} title="Order Entry" />
         <CardContent>
-          <form onSubmit={handleSubmit}>
-            <table>
-              <tr>
-                <td><label> Symbol:</label></td><td><input type="text" value={sym} onChange={labelSym_Change} /></td>
-              </tr>
-              <tr>
-                <td><label> Qty:</label></td><td><input type="number" value={qty} onChange={labelQty_Change} /></td>
-              </tr>
-              <tr>
-                <td><label> Price:</label></td><td><input type="number" value={price} onChange={labelPrice_Change} /></td>
-              </tr>
-            </table>
-            <input type="submit" value="Submit" />
+          <form className={classes.root} onSubmit={handleSubmit}>
+            <TextField label="Symbol" defaultValue="AAPL" variant="outlined" onChange={labelSym_Change} />
+            <TextField label="Quantity" type="number" variant="outlined" InputLabelProps={{ shrink: true }} onChange={labelQty_Change} />
+            <TextField label="Price" type="number" variant="outlined" InputLabelProps={{ shrink: true }} onChange={labelPrice_Change} />
+            <br />
+            <Button variant="outlined" type="submit" >SUBMIT</Button>
           </form>
 
         </CardContent>
