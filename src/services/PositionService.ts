@@ -1,5 +1,5 @@
 export interface IPositionServiceData {
-  participant: string;
+  symbol: string;
   qty: number;
   price: number;
 }
@@ -22,9 +22,9 @@ class PositionService {
 }
 
 const defaultData: IPositionServiceData[] = [
-  { participant: "Toyota", qty: 100, price: 30 },
-  { participant: "Ford", qty: 200, price: 40 },
-  { participant: "Porsche", qty: 200, price: 50 },
+  { symbol: "AAPL", qty: 100, price: 30 },
+  { symbol: "NFLX", qty: 200, price: 40 },
+  { symbol: "MSFT", qty: 200, price: 50 },
 ];
 
 const positionService = new PositionService();

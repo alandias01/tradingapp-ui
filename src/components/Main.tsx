@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   createMuiTheme,
   ThemeProvider,
@@ -12,6 +12,7 @@ import { Level2DataComponent } from "./Level2DataComponent";
 import { PositionComponent } from "./PositionComponent";
 import { CreateOrder } from "./CreateOrder";
 import { SelectSecurityComponent } from "./SelectSecurityComponent";
+import { TopBar } from './TopBar';
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
@@ -29,6 +30,15 @@ const theme = createMuiTheme({
       paper: "#303556"
       //paper: paperColor
     }
+  },
+  overrides: {
+    MuiToolbar: {
+      regular: {
+        '@media (min-width: 600px)': {
+          minHeight: "35px"
+        }
+      }
+    }
   }
 });
 
@@ -40,9 +50,12 @@ const useStyleGrid = makeStyles(() => ({
 
 export function Main() {
   const classes = useStyleGrid();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <TopBar setDrawerOpen={setDrawerOpen} />
       <div style={{ margin: 20 }}>
         <Grid container spacing={2} alignItems="stretch">
           <Grid item xs={12} sm={4}>
