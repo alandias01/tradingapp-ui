@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button } from "@material-ui/core";
+import { Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, MenuItem } from "@material-ui/core";
 import PositionService from "../services/PositionService";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -16,18 +16,15 @@ const useStyles = makeStyles((theme: Theme) =>
 export function CreateOrder() {
   const classes = useStyles();
 
-  const [sym, setSym] = useState<string>("");
+  const [symbol, setSymbol] = useState<string>("AAPL");
+  const [buysell, setbuysell] = useState<string>("BUY");
   const [qty, setQty] = useState<number>(1);
   const [price, setPrice] = useState<number>(1);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    PositionService.add({ symbol: sym, qty, price });
+    PositionService.add({ symbol, qty, price });
     e.preventDefault();
   };
-
-  const labelSym_Change = (e: React.ChangeEvent<HTMLInputElement>) => setSym(e.target.value);
-  const labelQty_Change = (e: React.ChangeEvent<HTMLInputElement>) => setQty(parseInt(e.target.value));
-  const labelPrice_Change = (e: React.ChangeEvent<HTMLInputElement>) => setPrice(parseInt(e.target.value));
 
   return (
     <div>
@@ -35,9 +32,18 @@ export function CreateOrder() {
         <CardHeader subheader={"Create an order"} title="Order Entry" />
         <CardContent>
           <form className={classes.root} onSubmit={handleSubmit}>
-            <TextField label="Symbol" defaultValue="AAPL" variant="outlined" onChange={labelSym_Change} />
-            <TextField label="Quantity" type="number" variant="outlined" InputLabelProps={{ shrink: true }} onChange={labelQty_Change} />
-            <TextField label="Price" type="number" variant="outlined" InputLabelProps={{ shrink: true }} onChange={labelPrice_Change} />
+            <TextField label="Symbol" defaultValue="AAPL" variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
+            <Select
+              onChange={(e) => setbuysell(e.target.value as string)}
+              variant="outlined"
+              value={buysell}
+              style={{ width: "100%" }}
+            >
+              <MenuItem value="BUY">BUY</MenuItem>
+              <MenuItem value="SELL">SELL</MenuItem>
+            </Select>
+            <TextField label="Quantity" type="number" variant="outlined" value={qty} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setQty(parseInt(e.target.value)) : 0} />
+            <TextField label="Price" type="number" variant="outlined" value={price} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setPrice(parseInt(e.target.value)) : 0} />
             <br />
             <Button variant="outlined" type="submit" >SUBMIT</Button>
           </form>
