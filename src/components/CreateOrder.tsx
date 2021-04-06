@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, MenuItem } from "@material-ui/core";
-import PositionService from "../services/PositionService";
+import { FormControl, Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, InputLabel, MenuItem } from "@material-ui/core";
+import PositionService, { Side, OrdType, Tif } from "../services/PositionService";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -16,14 +16,15 @@ const useStyles = makeStyles((theme: Theme) =>
 export function CreateOrder() {
   const classes = useStyles();
 
+  const [side, setSide] = useState<Side>(Side.BUY);
   const [symbol, setSymbol] = useState<string>("AAPL");
-  const [buysell, setbuysell] = useState<string>("BUY");
-  const [qty, setQty] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(1);
+  const [ordType, setOrdType] = useState<OrdType>(OrdType.MARKET);
+  const [tif, setTif] = useState<Tif>(Tif.DAY);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    PositionService.add({ symbol, qty, price });
-    e.preventDefault();
+  const handleSubmit = () => {
+    PositionService.NewOrder({ side, symbol, quantity, price, ordType, tif });
   };
 
   return (
@@ -31,23 +32,48 @@ export function CreateOrder() {
       <Card square>
         <CardHeader subheader={"Create an order"} title="Order Entry" />
         <CardContent>
-          <form className={classes.root} onSubmit={handleSubmit}>
-            <TextField label="Symbol" defaultValue="AAPL" variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
-            <Select
-              onChange={(e) => setbuysell(e.target.value as string)}
-              variant="outlined"
-              value={buysell}
-              style={{ width: "100%" }}
-            >
-              <MenuItem value="BUY">BUY</MenuItem>
-              <MenuItem value="SELL">SELL</MenuItem>
-            </Select>
-            <TextField label="Quantity" type="number" variant="outlined" value={qty} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setQty(parseInt(e.target.value)) : 0} />
-            <TextField label="Price" type="number" variant="outlined" value={price} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setPrice(parseInt(e.target.value)) : 0} />
-            <br />
-            <Button variant="outlined" type="submit" >SUBMIT</Button>
-          </form>
+          <form className={classes.root}>
 
+            <TextField label="Symbol" value={symbol} variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
+            <FormControl variant="outlined">
+              <InputLabel>Side</InputLabel>
+              <Select
+                label="Age"
+                onChange={(e) => setSide(e.target.value as Side)}
+                variant="outlined"
+                value={side}
+              // style={{ width: "100%" }}
+              >
+                <MenuItem key={Side.BUY} value={Side.BUY}>BUY</MenuItem>
+                <MenuItem key={Side.SELL} value={Side.SELL}>SELL</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField label="Quantity" type="number" variant="outlined" value={quantity} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setQuantity(parseInt(e.target.value)) : 0} />
+            <TextField label="Price" type="number" variant="outlined" value={price} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setPrice(parseInt(e.target.value)) : 0} />
+            <FormControl variant="outlined">
+              <InputLabel >Order Type</InputLabel>
+              <Select
+                label="Order Type"
+                onChange={(e) => setOrdType(e.target.value as OrdType)}
+                variant="outlined"
+                value={ordType}
+              >
+                {Object.keys(OrdType).map(x => <MenuItem key={x} value={x}>{x}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl variant="outlined">
+              <InputLabel >Time in Force</InputLabel>
+              <Select
+                label="Time in Force"
+                onChange={(e) => setTif(e.target.value as Tif)}
+                variant="outlined"
+                value={tif}
+              >
+                {Object.keys(Tif).map(x => <MenuItem key={x} value={x}>{x}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Button variant="outlined" onClick={handleSubmit} >SUBMIT</Button>
+          </form>
         </CardContent>
       </Card>
     </div>

@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import PositionService, { IPositionServiceData } from "../services/PositionService";
+import PositionService, { IPosition } from "../services/PositionService";
 import { ColumnApi, GridApi, GridReadyEvent } from "ag-grid-community";
 
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham-dark.css";
 
 export function PositionComponent() {
-  const [rowData, setRowData] = useState<IPositionServiceData[]>();
+  const [rowData, setRowData] = useState<IPosition[]>();
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
 
   useEffect(() => {
-    setRowData(PositionService.data);
+    setRowData(PositionService.Positions);
     if (gridApi) {
-      const addRowTransaction = (data: IPositionServiceData) => {
-        gridApi?.applyTransaction({ add: [data] });
+      const addRowTransaction = (position: IPosition) => {
+        gridApi?.applyTransaction({ add: [position] });
       };
-      PositionService.ItemAdded(addRowTransaction);
+      PositionService.onPositionUpdate(addRowTransaction);
     }
   }, [gridApi]);
 
