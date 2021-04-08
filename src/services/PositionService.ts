@@ -91,6 +91,7 @@ class PositionService {
       };
 
       this.Orders.push(order);
+      this.updatePosition(order);
     } catch (error) {}
   }
 

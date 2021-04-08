@@ -11,9 +11,13 @@ export function PositionComponent() {
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
+  const [columns, setColumns] = useState<{ field: string }[]>();
 
+  const getCols = () => Object.keys(PositionService.Positions[0]).map(key => ({ field: key }));
   useEffect(() => {
     setRowData(PositionService.Positions);
+    const columnsTemp = getCols();
+    setColumns(columnsTemp);
     if (gridApi) {
       const addRowTransaction = (position: IPosition) => {
         gridApi?.applyTransaction({ add: [position] });
@@ -43,9 +47,9 @@ export function PositionComponent() {
             resizable: true,
             headerComponentParams: { menuIcon: 'fa-bars' },
           }}>
-          <AgGridColumn field="symbol" />
-          <AgGridColumn field="qty" />
-          <AgGridColumn field="price" />
+          {columns && columns.map(column => (
+            <AgGridColumn {...column} key={column.field} />
+          ))}
         </AgGridReact>
       </div>
     </div>
