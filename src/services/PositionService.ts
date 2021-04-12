@@ -17,14 +17,18 @@ Level 2:
 Time in Sales(Tape) Exchange, price, qty  
 */
 
+export enum PositionUpdateType {
+  ADD = "ADD",
+  UPDATE = "UPDATE",
+  REMOVE = "REMOVE",
+}
+
 export interface IPosition {
+  positionId: string;
   symbol: string;
   quantity: number;
-  initialPrice: number;
-  initialPosition: number;
-  currentPrice: number;
-  currentPosition: number;
-  pnl: number;
+  price: number;
+  position: number;
 }
 
 interface INewOrder {
@@ -37,7 +41,7 @@ interface INewOrder {
 }
 
 interface IOrder extends INewOrder {
-  orderId: number;
+  orderId: string;
   orderDate: Date;
 }
 
@@ -61,12 +65,29 @@ export enum Tif {
   IOC = "IOC",
 }
 
-type IPositionUpdateObserver = (position: IPosition) => void;
+type IPositionUpdateObserver = (
+  position: IPosition,
+  updateType: PositionUpdateType
+) => void;
 
 class PositionService {
   Positions: IPosition[] = [];
   Orders: IOrder[] = [];
   private PositionUpdateobservers: IPositionUpdateObserver[] = [];
+  NextOrderId: number = 0;
+  NextPositionId: number = 0;
+
+  GetAndIncrementNextOrderId = () => {
+    const id = this.NextOrderId.toString();
+    this.NextOrderId++;
+    return id;
+  };
+
+  GetAndIncrementNextPositionId = () => {
+    const id = this.NextPositionId.toString();
+    this.NextPositionId++;
+    return id;
+  };
 
   NewOrder({
     side,
@@ -77,7 +98,7 @@ class PositionService {
     tif = Tif.DAY,
   }: INewOrder) {
     try {
-      const orderId = new Date().getUTCMilliseconds();
+      const orderId = this.GetAndIncrementNextOrderId();
       const orderDate = new Date(Date.now());
       const order: IOrder = {
         side,
@@ -101,36 +122,37 @@ class PositionService {
     //UPDATE POSITION
     if (foundPosition) {
       if (order.side === Side.BUY) {
+        foundPosition.price = order.price;
         foundPosition.quantity += order.quantity;
-        foundPosition.initialPosition =
-          foundPosition.quantity * foundPosition.initialPrice;
+        foundPosition.position = foundPosition.quantity * order.price;
 
-        foundPosition.currentPrice = order.price;
-
-        foundPosition.currentPosition =
-          foundPosition.quantity * foundPosition.currentPrice;
-
-        foundPosition.pnl =
-          foundPosition.currentPosition - foundPosition.initialPosition;
+        this.raisePositionUpdateObserver(
+          foundPosition,
+          PositionUpdateType.UPDATE
+        );
       } else if (order.side === Side.SELL) {
-        foundPosition.quantity > order.quantity
-          ? (foundPosition.quantity -= order.quantity)
-          : console.log("Cant sell more than you have");
+        if (foundPosition.quantity === order.quantity) {
+          const positionToRemove = { ...foundPosition };
+          this.Positions.splice(this.Positions.indexOf(foundPosition), 1);
+          this.raisePositionUpdateObserver(
+            positionToRemove,
+            PositionUpdateType.REMOVE
+          );
+        } else if (foundPosition.quantity > order.quantity) {
+          foundPosition.price = order.price;
+          foundPosition.quantity -= order.quantity;
+          foundPosition.position = foundPosition.quantity * order.price;
 
-        foundPosition.initialPosition =
-          foundPosition.quantity * foundPosition.initialPrice;
-
-        foundPosition.currentPrice = order.price;
-
-        foundPosition.currentPosition =
-          foundPosition.quantity * foundPosition.currentPrice;
-
-        foundPosition.pnl =
-          foundPosition.currentPosition - foundPosition.initialPosition;
+          this.raisePositionUpdateObserver(
+            foundPosition,
+            PositionUpdateType.UPDATE
+          );
+        } else {
+          console.log("Cant sell more than you have");
+        }
       } else {
         /*todo: SELLSHORT */
       }
-      this.raisePositionUpdateObserver(foundPosition);
 
       //Create new position
     } else {
@@ -138,25 +160,28 @@ class PositionService {
         const initialPosition = order.quantity * order.price;
 
         const position: IPosition = {
+          positionId: this.GetAndIncrementNextPositionId(),
           symbol: order.symbol,
           quantity: order.quantity,
-          initialPrice: order.price,
-          initialPosition,
-          currentPrice: order.price,
-          currentPosition: initialPosition,
-          pnl: 0,
+          price: order.price,
+          position: initialPosition,
         };
 
         this.Positions.push(position);
-        this.raisePositionUpdateObserver(position);
+        this.raisePositionUpdateObserver(position, PositionUpdateType.ADD);
       } else {
         console.log("You cannot sell what you do not own.");
       }
     }
   }
 
-  private raisePositionUpdateObserver(position: IPosition) {
-    this.PositionUpdateobservers.forEach((fn) => fn.call(this, position));
+  private raisePositionUpdateObserver(
+    position: IPosition,
+    updateType: PositionUpdateType
+  ) {
+    this.PositionUpdateobservers.forEach((fn) =>
+      fn.call(this, position, updateType)
+    );
   }
 
   onPositionUpdate(positionUpdateObserver: IPositionUpdateObserver) {

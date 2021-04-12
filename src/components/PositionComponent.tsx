@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import PositionService, { IPosition } from "../services/PositionService";
+import PositionService, { IPosition, PositionUpdateType, Side, OrdType, Tif } from "../services/PositionService";
 import { ColumnApi, GridApi, GridReadyEvent } from "ag-grid-community";
 
 import "ag-grid-community/dist/styles/ag-grid.css";
@@ -19,12 +19,37 @@ export function PositionComponent() {
     const columnsTemp = getCols();
     setColumns(columnsTemp);
     if (gridApi) {
-      const addRowTransaction = (position: IPosition) => {
-        gridApi?.applyTransaction({ add: [position] });
+      const addRowTransaction = (position: IPosition, updateType: PositionUpdateType) => {
+        switch (updateType) {
+          case PositionUpdateType.UPDATE:
+            gridApi?.applyTransaction({ update: [position] });
+            break;
+          case PositionUpdateType.ADD:
+            gridApi?.applyTransaction({ add: [position] });
+            break;
+          case PositionUpdateType.REMOVE:
+            gridApi?.applyTransaction({ remove: [position] });
+            break;
+          default:
+            break;
+        }
       };
+
       PositionService.onPositionUpdate(addRowTransaction);
     }
+
+    //AddOrdersSimulator();
+
   }, [gridApi]);
+
+  const AddOrdersSimulator = () => setInterval(() => PositionService.NewOrder({
+    side: Side.BUY,
+    symbol: "AAPL",
+    quantity: 100,
+    price: 30,
+    ordType: OrdType.MARKET,
+    tif: Tif.DAY,
+  }), 3000);
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -37,7 +62,11 @@ export function PositionComponent() {
         className="ag-theme-balham-dark"
         style={{ width: "auto", height: "100%", minHeight: 300 }}
       >
-        <AgGridReact rowData={rowData} onGridReady={onGridReady} suppressMenuHide={true}
+        <AgGridReact
+          rowData={rowData}
+          onGridReady={onGridReady}
+          suppressMenuHide={true}
+          getRowNodeId={(pos) => pos.positionId}
           defaultColDef={{
             editable: true,
             sortable: true,
