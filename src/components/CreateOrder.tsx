@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormControl, Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, InputLabel, MenuItem } from "@material-ui/core";
 import PositionService, { Side, OrdType, Tif } from "../services/PositionService";
+import { useSelectedSecurityContext } from '../Context/SelectedSecurityContext';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -15,13 +16,19 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function CreateOrder() {
   const classes = useStyles();
+  const { selectedSecurity } = useSelectedSecurityContext();
 
   const [side, setSide] = useState<Side>(Side.BUY);
-  const [symbol, setSymbol] = useState<string>("AAPL");
+  const [symbol, setSymbol] = useState<string>(selectedSecurity.SYMBOL);
   const [quantity, setQuantity] = useState<number>(1);
-  const [price, setPrice] = useState<number>(1);
+  const [price, setPrice] = useState<number>(selectedSecurity.DefaultPrice);
   const [ordType, setOrdType] = useState<OrdType>(OrdType.MARKET);
   const [tif, setTif] = useState<Tif>(Tif.DAY);
+
+  useEffect(() => {
+    setSymbol(selectedSecurity.SYMBOL);
+    setPrice(selectedSecurity.DefaultPrice);
+  }, [selectedSecurity]);
 
   const handleSubmit = () => {
     PositionService.NewOrder({ side, symbol, quantity, price, ordType, tif });

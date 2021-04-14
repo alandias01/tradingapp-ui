@@ -1,16 +1,22 @@
-import React, { useState } from "react";
-import { Select, MenuItem } from "@material-ui/core";
+import React from "react";
+import { Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
 import { SecurityMasterService, ISecurityMasterService } from '../services/SecurityMasterService';
+import { useSelectedSecurityContext } from '../Context/SelectedSecurityContext';
 
 export function SelectSecurityComponent() {
 
-  const [selectedSecurity, setSelectedSecurity] = useState<ISecurityMasterService>(SecurityMasterService[0]);
+  const { selectedSecurity, setSelectedSecurity } = useSelectedSecurityContext();
+
+  const handleChange = (e: any) => setSelectedSecurity(e.target.value as ISecurityMasterService);
 
   return (
     <div>
-      <Select variant="outlined" value={selectedSecurity.SYMBOL} onChange={(e) => setSelectedSecurity(e.target.value as ISecurityMasterService)} style={{ width: "100%" }}>
-        {SecurityMasterService.map(security => <MenuItem key={security.SYMBOL} value={security.SYMBOL}> {security.SYMBOL}  </MenuItem>)}
-      </Select>
+      <FormControl variant="outlined" style={{ width: "100%" }}>
+        <InputLabel >Symbol</InputLabel>
+        <Select label="Symbol" variant="outlined" value={selectedSecurity} onChange={handleChange} >
+          {SecurityMasterService.map(security => (<MenuItem key={security.SYMBOL} value={security as any}> {security.SYMBOL}  </MenuItem>))}
+        </Select>
+      </FormControl>
     </div>
   );
 }

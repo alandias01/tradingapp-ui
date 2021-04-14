@@ -13,6 +13,7 @@ import { PositionComponent } from "./PositionComponent";
 import { CreateOrder } from "./CreateOrder";
 import { SelectSecurityComponent } from "./SelectSecurityComponent";
 import { TopBar } from './TopBar';
+import { SelectedSecurityProvider } from '../Context/SelectedSecurityContext';
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
@@ -55,28 +56,30 @@ export function Main() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <TopBar setDrawerOpen={setDrawerOpen} />
-      <div style={{ margin: 20 }}>
-        <Grid container spacing={2} alignItems="stretch">
-          <Grid item xs={12} sm={4}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <SelectSecurityComponent />
-              </Grid>
-              <Grid item xs={12}>
-                <Level2DataComponent />
-              </Grid>
-              <Grid item xs={12}>
-                <CreateOrder />
+      <SelectedSecurityProvider>
+        <TopBar setDrawerOpen={setDrawerOpen} />
+        <div style={{ margin: 20 }}>
+          <Grid container spacing={2} alignItems="stretch">
+            <Grid item xs={12} sm={4}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <SelectSecurityComponent />
+                </Grid>
+                <Grid item xs={12}>
+                  <Level2DataComponent />
+                </Grid>
+                <Grid item xs={12}>
+                  <CreateOrder />
+                </Grid>
               </Grid>
             </Grid>
+            <Grid item xs={12} sm={8}>
+              <PositionComponent />
+            </Grid>
+            <Grid item xs={12} sm={4} className={classes.root}></Grid>
           </Grid>
-          <Grid item xs={12} sm={8}>
-            <PositionComponent />
-          </Grid>
-          <Grid item xs={12} sm={4} className={classes.root}></Grid>
-        </Grid>
-      </div>
+        </div>
+      </SelectedSecurityProvider>
     </ThemeProvider>
   );
 }
