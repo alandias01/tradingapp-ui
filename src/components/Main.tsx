@@ -39,13 +39,31 @@ const theme = createMuiTheme({
           minHeight: "35px"
         }
       }
+    },
+    MuiOutlinedInput: {
+      input: {
+        padding: "10px 14px"
+      }
     }
   }
 });
 
+const gridLeftMaxWidth = 300;
+
 const useStyleGrid = makeStyles(() => ({
   root: {
     flexGrow: 1
+  },
+  gridLeftMax: {
+    "@media (min-width: 600px)": {
+      maxWidth: `${gridLeftMaxWidth}px`
+    }
+  },
+  gridRightMax: {
+    "@media (min-width: 600px)": {
+      maxWidth: `calc(100% - ${gridLeftMaxWidth}px)`,
+      flexGrow: 1
+    }
   }
 }));
 
@@ -60,7 +78,7 @@ export function Main() {
         <TopBar setDrawerOpen={setDrawerOpen} />
         <div style={{ margin: 20 }}>
           <Grid container spacing={2} alignItems="stretch">
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={4} className={classes.gridLeftMax}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <SelectSecurityComponent />
@@ -73,10 +91,10 @@ export function Main() {
                 </Grid>
               </Grid>
             </Grid>
-            <Grid item xs={12} sm={8}>
+            <Grid item xs={12} sm={8} className={classes.gridRightMax}>
               <PositionComponent />
             </Grid>
-            <Grid item xs={12} sm={4} className={classes.root}></Grid>
+            {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
           </Grid>
         </div>
       </SelectedSecurityProvider>
