@@ -13,3 +13,6 @@ export const TaskDelay = <T extends {}>(
   new Promise((res, rej) =>
     setTimeout(() => (shouldResolve ? res(data) : rej(error)), timeToDelay)
   );
+
+export const random = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min)) + min;
