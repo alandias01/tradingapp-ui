@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import PositionService, { IPosition, PositionUpdateType } from "../services/PositionService";
-import { Side, OrdType, Tif } from '../services/OrderService';
-import { ColumnApi, GridApi, GridReadyEvent } from "ag-grid-community";
+import orderService, { IChildOrder } from "../../services/OrderService";
+import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham-dark.css";
 
-export function PositionComponent() {
-  const [rowData, setRowData] = useState<IPosition[]>();
+export function ChildOrderComponent() {
+  const [rowData, setRowData] = useState<IChildOrder[]>();
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
   const [columns, setColumns] = useState<{ field: string }[]>();
 
-  const getCols = () => Object.keys(PositionService.Positions[0]).map(key => ({ field: key }));
+  const getCols = () => Object.keys(orderService.ChildOrders[0]).map(key => ({ field: key }));
   useEffect(() => {
-    setRowData(PositionService.Positions);
+    setRowData(orderService.ChildOrders);
     const columnsTemp = getCols();
     setColumns(columnsTemp);
+    if (gridColumnApi) {
+      adjustColumns();
+    }
+    /*
     if (gridApi) {
       const addRowTransaction = (position: IPosition, updateType: PositionUpdateType) => {
         switch (updateType) {
@@ -37,20 +40,27 @@ export function PositionComponent() {
       };
 
       PositionService.onPositionUpdate(addRowTransaction);
+
     }
+    */
+  }, [gridColumnApi]);
 
-    //AddOrdersSimulator();
+  const adjustColumns = () => {
+    if (gridColumnApi) {
+      const allColumnIds: string[] = [];
+      const allColumns = gridColumnApi.getAllColumns();
+      if (allColumns) {
+        allColumns.forEach((column: Column) => {
+          allColumnIds.push(column.getColId());
+        });
 
-  }, [gridApi]);
-
-  const AddOrdersSimulator = () => setInterval(() => PositionService.NewOrder({
-    side: Side.BUY,
-    symbol: "AAPL",
-    quantity: 100,
-    price: 30,
-    ordType: OrdType.MARKET,
-    tif: Tif.DAY,
-  }), 3000);
+        gridColumnApi.autoSizeColumns(allColumnIds, false);
+      }
+      else {
+        console.log("allColumns was null")
+      }
+    }
+  }
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -61,7 +71,7 @@ export function PositionComponent() {
     <div style={{ height: "100%" }}>
       <div
         className="ag-theme-balham-dark"
-        style={{ width: "auto", height: "100%", minHeight: 300 }}
+        style={{ width: "auto", height: "100%", minHeight: 200 }}
       >
         <AgGridReact
           rowData={rowData}

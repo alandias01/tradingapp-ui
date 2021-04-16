@@ -1,21 +1,9 @@
 /* 
 Pie chart for positions, which position is biggest
 Create account for allocations
-
-When you select Symbol: 
-	populates Create order symbol
-	Opens Chart
-
-Submit Order-> L2, Pos, Order
-Stock Data
-Symbol, open, %chang
-
-Level 2: 
-  Exchange, BID, qty
-  Exchange, ASK, qty
-
-Time in Sales(Tape) Exchange, price, qty  
 */
+
+import { Side, OrdType, Tif } from "./OrderService";
 
 export enum PositionUpdateType {
   ADD = "ADD",
@@ -43,26 +31,6 @@ interface INewOrder {
 interface IOrder extends INewOrder {
   orderId: string;
   orderDate: Date;
-}
-
-export enum Side {
-  BUY = "BUY",
-  SELL = "SELL",
-  SHORT = "SHORT",
-}
-
-export enum OrdType {
-  MARKET = "MARKET",
-  LIMIT = "LIMIT",
-  STOP = "STOP",
-  STOPLIMIT = "STOPLIMIT",
-}
-
-export enum Tif {
-  DAY = "DAY",
-  GTC = "GTC",
-  OPG = "OPG",
-  IOC = "IOC",
 }
 
 type IPositionUpdateObserver = (

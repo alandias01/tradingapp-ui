@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FormControl, Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, InputLabel, MenuItem } from "@material-ui/core";
-import PositionService, { Side, OrdType, Tif } from "../services/PositionService";
+
+import orderService, { Algo, Moniker, Side, OrdType, Tif } from '../services/OrderService';
 import { useSelectedSecurityContext } from '../Context/SelectedSecurityContext';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -18,20 +19,20 @@ export function CreateOrder() {
   const classes = useStyles();
   const { selectedSecurity } = useSelectedSecurityContext();
 
-  const [side, setSide] = useState<Side>(Side.BUY);
+  const [moniker, setMoniker] = useState(Moniker.JPM);
   const [symbol, setSymbol] = useState<string>(selectedSecurity.SYMBOL);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [price, setPrice] = useState<number>(selectedSecurity.DefaultPrice);
+  const [side, setSide] = useState<Side>(Side.BUY);
+  const [algo, setAlgo] = useState(Algo.BLOCK)
   const [ordType, setOrdType] = useState<OrdType>(OrdType.MARKET);
+  const [orderQty, setOrderQty] = useState<number>(1);
   const [tif, setTif] = useState<Tif>(Tif.DAY);
 
   useEffect(() => {
     setSymbol(selectedSecurity.SYMBOL);
-    setPrice(selectedSecurity.DefaultPrice);
   }, [selectedSecurity]);
 
   const handleSubmit = () => {
-    PositionService.NewOrder({ side, symbol, quantity, price, ordType, tif });
+    orderService.NewParentOrder({ moniker, symbol, side, algo, ordType, orderQty, tif });
   };
 
   return (
@@ -42,21 +43,45 @@ export function CreateOrder() {
           <form className={classes.root}>
 
             <TextField label="Symbol" value={symbol} variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
+
+            <FormControl variant="outlined">
+              <InputLabel >Moniker</InputLabel>
+              <Select
+                label="Moniker"
+                onChange={(e) => setMoniker(e.target.value as Moniker)}
+                variant="outlined"
+                value={moniker}
+              >
+                {Object.keys(Moniker).map(x => <MenuItem key={x} value={x}>{x}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <FormControl variant="outlined">
+              <InputLabel >Algo</InputLabel>
+              <Select
+                label="Algo"
+                onChange={(e) => setAlgo(e.target.value as Algo)}
+                variant="outlined"
+                value={algo}
+              >
+                {Object.keys(Algo).map(x => <MenuItem key={x} value={x}>{x}</MenuItem>)}
+              </Select>
+            </FormControl>
+
             <FormControl variant="outlined">
               <InputLabel>Side</InputLabel>
               <Select
-                label="Age"
+                label="Side"
                 onChange={(e) => setSide(e.target.value as Side)}
                 variant="outlined"
                 value={side}
-              // style={{ width: "100%" }}
               >
                 <MenuItem key={Side.BUY} value={Side.BUY}>BUY</MenuItem>
                 <MenuItem key={Side.SELL} value={Side.SELL}>SELL</MenuItem>
               </Select>
             </FormControl>
-            <TextField label="Quantity" type="number" variant="outlined" value={quantity} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setQuantity(parseInt(e.target.value)) : 0} />
-            <TextField label="Price" type="number" variant="outlined" value={price} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setPrice(parseInt(e.target.value)) : 0} />
+            <TextField label="Quantity" type="number" variant="outlined" value={orderQty} InputLabelProps={{ shrink: true }} onChange={(e) => parseInt(e.target.value) > 0 ? setOrderQty(parseInt(e.target.value)) : 0} />
+
             <FormControl variant="outlined">
               <InputLabel >Order Type</InputLabel>
               <Select

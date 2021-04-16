@@ -1,3 +1,11 @@
+/*
+Level 2: 
+  Exchange, BID, qty
+  Exchange, ASK, qty
+
+Time in Sales(Tape) Exchange, price, qty  
+*/
+
 import { SecurityMasterService } from "./SecurityMasterService";
 
 const Participants = [

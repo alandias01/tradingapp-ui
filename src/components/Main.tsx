@@ -9,11 +9,11 @@ import {
 
 import Color from "color";
 import { Level2DataComponent } from "./Level2DataComponent";
-import { PositionComponent } from "./PositionComponent";
 import { CreateOrder } from "./CreateOrder";
 import { SelectSecurityComponent } from "./SelectSecurityComponent";
 import { TopBar } from './TopBar';
 import { SelectedSecurityProvider } from '../Context/SelectedSecurityContext';
+import { OrderGridComponent } from './OrderGrid/OrderGirdComponent';
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
@@ -92,7 +92,7 @@ export function Main() {
               </Grid>
             </Grid>
             <Grid item xs={12} sm={8} className={classes.gridRightMax}>
-              <PositionComponent />
+              <OrderGridComponent />
             </Grid>
             {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
           </Grid>
