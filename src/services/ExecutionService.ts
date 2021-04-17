@@ -16,35 +16,55 @@ class ExecutionService {
     childOrder: IChildOrder,
     executionOrders: IExecutionOrder[]
   ) {
-    const qtyToFill = random(1, qtyRemaining);
-    const newExecutionOrder = this.createExecutionOrder(childOrder, qtyToFill);
-    executionOrders.push(newExecutionOrder);
+    const { orderQty } = childOrder;
+    if (orderQty - qtyRemaining === 0)
+      executionOrders.push(
+        this.createExecutionOrder(childOrder, 0, qtyRemaining, 0, OrdStatus.NEW)
+      );
 
+    const qtyToFill = random(1, qtyRemaining);
     const qtyLeft = qtyRemaining - qtyToFill;
 
-    if (qtyLeft < 10) {
+    if (qtyRemaining >= 10) {
+      const newExecutionOrder = this.createExecutionOrder(
+        childOrder,
+        orderQty - qtyRemaining + qtyToFill,
+        qtyLeft,
+        qtyToFill,
+        OrdStatus.PARTIALLYFILLED
+      );
+      executionOrders.push(newExecutionOrder);
+      this.createRecursiveExecutionOrders(qtyLeft, childOrder, executionOrders);
+    } else {
       const finalExecutionOrder = this.createExecutionOrder(
         childOrder,
-        qtyLeft
+        orderQty,
+        0,
+        qtyRemaining,
+        OrdStatus.FILLED
       );
       executionOrders.push(finalExecutionOrder);
-    } else {
-      this.createRecursiveExecutionOrders(qtyLeft, childOrder, executionOrders);
     }
   }
 
-  private createExecutionOrder(childOrder: IChildOrder, orderQty: number) {
+  private createExecutionOrder(
+    childOrder: IChildOrder,
+    cumQty: number,
+    leavesQty: number,
+    lastQty: number,
+    ordStatus: OrdStatus
+  ) {
     const execId = this.GetAndIncrementNextOrderId();
     const newExecutionOrder: IExecutionOrder = {
       execId,
       childId: childOrder.childId,
       symbol: childOrder.symbol,
       side: childOrder.side,
-      ordStatus: OrdStatus.NEW,
-      orderQty,
-      cumQty: 0,
-      leavesQty: 0,
-      lastQty: 0,
+      ordStatus,
+      orderQty: childOrder.orderQty,
+      cumQty,
+      leavesQty,
+      lastQty,
       lastPx: 0,
       currency: "USD",
       tradeDate: childOrder.tradeDate,
