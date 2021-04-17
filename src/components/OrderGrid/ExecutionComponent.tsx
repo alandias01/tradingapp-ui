@@ -74,10 +74,11 @@ export function ExecutionComponent() {
         style={{ width: "auto", height: "100%", minHeight: 400 }}
       >
         <AgGridReact
+          rowSelection='single'
           rowData={rowData}
           onGridReady={onGridReady}
           suppressMenuHide={true}
-          getRowNodeId={(pos) => pos.positionId}
+          getRowNodeId={(x) => x.execId}
           defaultColDef={{
             editable: true,
             sortable: true,

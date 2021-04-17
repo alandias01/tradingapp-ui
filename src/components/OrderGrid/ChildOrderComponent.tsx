@@ -74,10 +74,11 @@ export function ChildOrderComponent() {
         style={{ width: "auto", height: "100%", minHeight: 200 }}
       >
         <AgGridReact
+          rowSelection='single'
           rowData={rowData}
           onGridReady={onGridReady}
           suppressMenuHide={true}
-          getRowNodeId={(pos) => pos.positionId}
+          getRowNodeId={(x) => x.childId}
           defaultColDef={{
             editable: true,
             sortable: true,

@@ -67,6 +67,9 @@ export function ParentOrderComponent() {
     setGridColumnApi(params.columnApi);
   };
 
+  const gridOptions = {
+  }
+
   return (
     <div style={{ height: "100%" }}>
       <div
@@ -74,10 +77,12 @@ export function ParentOrderComponent() {
         style={{ width: "auto", height: "100%", minHeight: 200 }}
       >
         <AgGridReact
+          rowSelection="single"
+          gridOptions={gridOptions}
           rowData={rowData}
           onGridReady={onGridReady}
           suppressMenuHide={true}
-          getRowNodeId={(pos) => pos.positionId}
+          getRowNodeId={(x) => x.parentId}
           defaultColDef={{
             editable: true,
             sortable: true,
