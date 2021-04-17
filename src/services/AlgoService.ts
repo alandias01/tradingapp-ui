@@ -10,25 +10,6 @@ class AlgoService {
     return id;
   };
 
-  private createRecursiveChildOrders(
-    qtyRemaining: number,
-    parentOrder: IParentOrder,
-    childOrders: IChildOrder[]
-  ) {
-    const qtyToFill = random(1, qtyRemaining);
-    const newChildOrder = this.createChildOrder(parentOrder, qtyToFill);
-    childOrders.push(newChildOrder);
-
-    const qtyLeft = qtyRemaining - qtyToFill;
-
-    if (qtyLeft < 10) {
-      const finalChildOrder = this.createChildOrder(parentOrder, qtyLeft);
-      childOrders.push(finalChildOrder);
-    } else {
-      this.createRecursiveChildOrders(qtyLeft, parentOrder, childOrders);
-    }
-  }
-
   private createChildOrder(parentOrder: IParentOrder, orderQty: number) {
     const childId = this.GetAndIncrementNextOrderId();
     const newChildOrder: IChildOrder = {
@@ -50,6 +31,47 @@ class AlgoService {
     return newChildOrder;
   }
 
+  private createBlockChildOrders(
+    orderBlock: number,
+    qtyRemaining: number,
+    parentOrder: IParentOrder,
+    childOrders: IChildOrder[]
+  ) {
+    const newChildOrder = this.createChildOrder(parentOrder, orderBlock);
+    childOrders.push(newChildOrder);
+
+    const qtyLeft = qtyRemaining - orderBlock;
+
+    if (qtyLeft < orderBlock) {
+      const finalChildOrder = this.createChildOrder(parentOrder, qtyLeft);
+      childOrders.push(finalChildOrder);
+    } else {
+      this.createBlockChildOrders(
+        orderBlock,
+        qtyLeft,
+        parentOrder,
+        childOrders
+      );
+    }
+  }
+
+  private getBlockAlgoQuantity(parentOrder: IParentOrder) {
+    const { orderQty } = parentOrder;
+
+    if (orderQty <= 50) {
+      return orderQty;
+    } else if (orderQty > 50 && orderQty <= 200) {
+      return 50;
+    } else if (orderQty > 200 && orderQty <= 600) {
+      return 100;
+    } else if (orderQty > 600 && orderQty <= 2000) {
+      return 200;
+    } else if (orderQty > 2000) {
+      return 500;
+    }
+    return orderQty;
+  }
+
   public ProcessAlgoOrder(parentOrder: IParentOrder): IChildOrder[] {
     const childOrders: IChildOrder[] = [];
 
@@ -57,7 +79,9 @@ class AlgoService {
       if (parentOrder.algo === Algo.NONE || parentOrder.orderQty === 0)
         return [];
 
-      this.createRecursiveChildOrders(
+      const blockQty = this.getBlockAlgoQuantity(parentOrder);
+      this.createBlockChildOrders(
+        blockQty,
         parentOrder.orderQty,
         parentOrder,
         childOrders
