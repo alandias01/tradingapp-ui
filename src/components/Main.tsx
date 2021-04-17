@@ -61,7 +61,7 @@ const useStyleGrid = makeStyles(() => ({
   },
   gridRightMax: {
     "@media (min-width: 600px)": {
-      maxWidth: `calc(100% - ${gridLeftMaxWidth}px)`,
+      maxWidth: `calc(100% - ${gridLeftMaxWidth - 100}px)`,
       flexGrow: 1
     }
   }

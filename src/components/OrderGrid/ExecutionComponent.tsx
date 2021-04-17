@@ -71,7 +71,7 @@ export function ExecutionComponent() {
     <div style={{ height: "100%" }}>
       <div
         className="ag-theme-balham-dark"
-        style={{ width: "auto", height: "100%", minHeight: 200 }}
+        style={{ width: "auto", height: "100%", minHeight: 400 }}
       >
         <AgGridReact
           rowData={rowData}
