@@ -21,17 +21,14 @@ import { ExecutionComponent } from './ExecutionComponent';
 
 export function OrderGridComponent() {
   return (
-    <Grid container spacing={4}>
+    <Grid container spacing={6}>
       <Grid item xs={12}>
-        Parent Orders
         <ParentOrderComponent />
       </Grid>
       <Grid item xs={12}>
-        Child Orders
         <ChildOrderComponent />
       </Grid>
       <Grid item xs={12}>
-        Executions
         <ExecutionComponent />
       </Grid>
     </Grid>

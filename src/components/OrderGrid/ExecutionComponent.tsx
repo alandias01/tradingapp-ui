@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
 import orderService, { IExecutionOrder } from "../../services/OrderService";
+import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
+import { Button, Typography } from '@material-ui/core';
 
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham-dark.css";
@@ -12,8 +14,12 @@ export function ExecutionComponent() {
   const [gridApi, setGridApi] = useState<GridApi>();
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
   const [columns, setColumns] = useState<{ field: string }[]>();
+  const { gridEvent } = useGridEventContext();
+
+  const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
   const getCols = () => Object.keys(orderService.ExecutionOrders[0]).map(key => ({ field: key }));
+
   useEffect(() => {
     setRowData(orderService.ExecutionOrders);
     const columnsTemp = getCols();
@@ -45,6 +51,17 @@ export function ExecutionComponent() {
     */
   }, [gridColumnApi]);
 
+  useEffect(() => {
+    if (gridApi && gridEvent.rowSelectedChild) {
+      const filterInstance = gridApi.getFilterInstance("childId");
+      if (filterInstance) {
+        filterInstance.setModel({ type: "equals", filter: gridEvent.rowSelectedChild[0].childId, filterType: "text" });
+        gridApi.onFilterChanged();
+      }
+    }
+
+  }, [gridEvent])
+
   const adjustColumns = () => {
     if (gridColumnApi) {
       const allColumnIds: string[] = [];
@@ -73,6 +90,8 @@ export function ExecutionComponent() {
         className="ag-theme-balham-dark"
         style={{ width: "auto", height: "100%", minHeight: 400 }}
       >
+        <Typography variant="h6" display="inline" > Executions</Typography>
+        <Button style={{ margin: "0px 25px" }} onClick={handleClick_ClearFilters} size="small" variant="text">RESET FILTERS</Button>
         <AgGridReact
           rowSelection='single'
           rowData={rowData}
@@ -83,7 +102,7 @@ export function ExecutionComponent() {
             editable: true,
             sortable: true,
             flex: 1,
-            minWidth: 70,
+            minWidth: 100,
             filter: true,
             resizable: true,
             headerComponentParams: { menuIcon: 'fa-bars' },

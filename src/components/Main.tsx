@@ -13,6 +13,7 @@ import { CreateOrder } from "./CreateOrder";
 import { SelectSecurityComponent } from "./SelectSecurityComponent";
 import { TopBar } from './TopBar';
 import { SelectedSecurityProvider } from '../Context/SelectedSecurityContext';
+import { GridEventProvider } from '../Context/GridEventContext';
 import { OrderGridComponent } from './OrderGrid/OrderGirdComponent';
 
 const paperColor = Color("#394873").alpha(0.3).string();
@@ -75,28 +76,30 @@ export function Main() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <SelectedSecurityProvider>
-        <TopBar setDrawerOpen={setDrawerOpen} />
-        <div style={{ margin: 20 }}>
-          <Grid container spacing={2} alignItems="stretch">
-            <Grid item xs={12} sm={4} className={classes.gridLeftMax}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <SelectSecurityComponent />
-                </Grid>
-                <Grid item xs={12}>
-                  <Level2DataComponent />
-                </Grid>
-                <Grid item xs={12}>
-                  <CreateOrder />
+        <GridEventProvider>
+          <TopBar setDrawerOpen={setDrawerOpen} />
+          <div style={{ margin: 20 }}>
+            <Grid container spacing={2} alignItems="stretch">
+              <Grid item xs={12} sm={4} className={classes.gridLeftMax}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <SelectSecurityComponent />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Level2DataComponent />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <CreateOrder />
+                  </Grid>
                 </Grid>
               </Grid>
+              <Grid item xs={12} sm={8} className={classes.gridRightMax}>
+                <OrderGridComponent />
+              </Grid>
+              {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
             </Grid>
-            <Grid item xs={12} sm={8} className={classes.gridRightMax}>
-              <OrderGridComponent />
-            </Grid>
-            {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
-          </Grid>
-        </div>
+          </div>
+        </GridEventProvider>
       </SelectedSecurityProvider>
     </ThemeProvider>
   );

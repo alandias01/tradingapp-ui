@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
 import orderService, { IParentOrder } from '../../services/OrderService';
+import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
+import { Button, Typography } from '@material-ui/core';
 
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham-dark.css";
@@ -12,8 +14,12 @@ export function ParentOrderComponent() {
   const [gridApi, setGridApi] = useState<GridApi>();
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
   const [columns, setColumns] = useState<{ field: string }[]>();
+  const { setGridEvent } = useGridEventContext();
+
+  const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
   const getCols = () => Object.keys(orderService.ParentOrders[0]).map(key => ({ field: key }));
+
   useEffect(() => {
     setRowData(orderService.ParentOrders);
     const columnsTemp = getCols();
@@ -69,6 +75,10 @@ export function ParentOrderComponent() {
 
   const gridOptions = {
   }
+  const onSelectionChanged = () => {
+    const selectedRows = gridApi?.getSelectedRows();
+    setGridEvent({ rowSelectedParent: selectedRows })
+  }
 
   return (
     <div style={{ height: "100%" }}>
@@ -76,7 +86,10 @@ export function ParentOrderComponent() {
         className="ag-theme-balham-dark"
         style={{ width: "auto", height: "100%", minHeight: 200 }}
       >
+        <Typography variant="h6" display="inline" > Parent Orders</Typography>
+        <Button style={{ margin: "0px 25px" }} onClick={handleClick_ClearFilters} size="small" variant="text">RESET FILTERS</Button>
         <AgGridReact
+          onSelectionChanged={onSelectionChanged}
           rowSelection="single"
           gridOptions={gridOptions}
           rowData={rowData}
@@ -87,7 +100,7 @@ export function ParentOrderComponent() {
             editable: true,
             sortable: true,
             flex: 1,
-            minWidth: 70,
+            minWidth: 100,
             filter: true,
             resizable: true,
             headerComponentParams: { menuIcon: 'fa-bars' },
