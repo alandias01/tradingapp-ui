@@ -47,7 +47,7 @@ class ExecutionService {
     }
   }
 
-  private createExecutionOrder(
+  public createExecutionOrder(
     childOrder: IChildOrder,
     cumQty: number,
     leavesQty: number,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import orderService, { IParentOrder } from '../../services/OrderService';
+import orderService, { IParentOrder, dummyParentOrder } from '../../services/OrderService';
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -18,7 +18,7 @@ export function ParentOrderComponent() {
 
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
-  const getCols = () => Object.keys(orderService.ParentOrders[0]).map(key => ({ field: key }));
+  const getCols = () => Object.keys(dummyParentOrder).map(key => ({ field: key }));
 
   useEffect(() => {
     setRowData(orderService.ParentOrders);

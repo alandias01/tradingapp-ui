@@ -10,7 +10,7 @@ class AlgoService {
     return id;
   };
 
-  private createChildOrder(parentOrder: IParentOrder, orderQty: number) {
+  public createChildOrder(parentOrder: IParentOrder, orderQty: number) {
     const childId = this.GetAndIncrementNextOrderId();
     const newChildOrder: IChildOrder = {
       childId,

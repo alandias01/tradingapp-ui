@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import orderService, { IChildOrder } from "../../services/OrderService";
+import orderService, { IChildOrder, dummyChildOrder, IOrderUpdateEvent, IExecutionOrder } from "../../services/OrderService";
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -35,12 +35,26 @@ export function ChildOrderComponent() {
 
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
-  const getCols = () => Object.keys(orderService.ChildOrders[0]).map(key => ({ field: key }));
+  const getCols = () => Object.keys(dummyChildOrder).map(key => ({ field: key }));
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
     setGridColumnApi(params.columnApi);
   };
+
+  const next = (orderEvent: IOrderUpdateEvent) => {
+    const eo = orderEvent.payload as IExecutionOrder;
+    const rowNode = gridApi?.getRowNode(eo.childId);
+    if (!rowNode) return;
+
+    const data: IChildOrder = rowNode.data;
+    data.ordStatus = eo.ordStatus;
+    data.filledQty = eo.cumQty;
+    data.unfilledQty = eo.leavesQty;
+    gridApi?.applyTransaction({ update: [data] });
+  };
+
+  orderService.ExecutionAdd.subscribe({ next });
 
   useEffect(() => {
     setRowData(orderService.ChildOrders);
