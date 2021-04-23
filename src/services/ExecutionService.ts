@@ -12,6 +12,19 @@ class ExecutionService {
     return id;
   };
 
+  private getAvgPx(ordersToConsider: IExecutionOrder[], price: number) {
+    if (ordersToConsider.length === 0) {
+      return price;
+    } else {
+      const sumOfPrices = ordersToConsider
+        .map((x) => x.lastPx)
+        .reduce((x, y) => x + y);
+      const avgPx = (sumOfPrices + price) / (ordersToConsider.length + 1);
+
+      return Math.floor(avgPx);
+    }
+  }
+
   private createRecursiveExecutionOrders(
     qtyRemaining: number,
     defaultPrice: number,
@@ -27,6 +40,7 @@ class ExecutionService {
           qtyRemaining,
           0,
           0,
+          0,
           OrdStatus.NEW
         )
       );
@@ -35,13 +49,20 @@ class ExecutionService {
     const qtyLeft = qtyRemaining - qtyToFill;
     const executionPrice = random(defaultPrice - 3, defaultPrice + 3);
 
+    const executionOrdersToConsider = executionOrders.filter(
+      (x) => x.ordStatus !== OrdStatus.NEW
+    );
+
     if (qtyRemaining >= 10) {
+      const avgPx = this.getAvgPx(executionOrdersToConsider, executionPrice);
+
       const newExecutionOrder = this.createExecutionOrder(
         childOrder,
         orderQty - qtyRemaining + qtyToFill,
         qtyLeft,
         qtyToFill,
         executionPrice,
+        avgPx,
         OrdStatus.PARTIALLYFILLED
       );
       executionOrders.push(newExecutionOrder);
@@ -52,12 +73,15 @@ class ExecutionService {
         executionOrders
       );
     } else {
+      const avgPx = this.getAvgPx(executionOrdersToConsider, defaultPrice);
+
       const finalExecutionOrder = this.createExecutionOrder(
         childOrder,
         orderQty,
         0,
         qtyRemaining,
         defaultPrice,
+        avgPx,
         OrdStatus.FILLED
       );
       executionOrders.push(finalExecutionOrder);
@@ -70,6 +94,7 @@ class ExecutionService {
     leavesQty: number,
     lastQty: number,
     lastPx: number,
+    avgPx: number,
     ordStatus: OrdStatus
   ) {
     const execId = this.GetAndIncrementNextOrderId();
@@ -84,6 +109,7 @@ class ExecutionService {
       leavesQty,
       lastQty,
       lastPx,
+      avgPx,
       currency: "USD",
       tradeDate: childOrder.tradeDate,
       transactTime: dayjs().format("YYYY-MM-DD HH:mm:ssSSS"),

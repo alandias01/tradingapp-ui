@@ -93,6 +93,7 @@ export interface IExecutionOrder {
   leavesQty: number;
   lastQty: number;
   lastPx: number;
+  avgPx: number;
   currency: string;
   tradeDate: Date;
   transactTime: string;
@@ -266,6 +267,7 @@ export const dummyChildOrder = algoService.createChildOrder(
 
 export const dummyExecutionOrder = executionService.createExecutionOrder(
   dummyChildOrder,
+  0,
   0,
   0,
   0,

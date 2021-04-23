@@ -51,6 +51,7 @@ export function ChildOrderComponent() {
     data.ordStatus = eo.ordStatus;
     data.filledQty = eo.cumQty;
     data.unfilledQty = eo.leavesQty;
+    data.avgPrice = eo.avgPx;
     gridApi?.applyTransaction({ update: [data] });
   };
 
