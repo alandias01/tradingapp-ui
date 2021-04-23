@@ -42,7 +42,7 @@ class AlgoService {
 
     const qtyLeft = qtyRemaining - orderBlock;
 
-    if (qtyLeft < orderBlock) {
+    if (qtyLeft <= orderBlock) {
       const finalChildOrder = this.createChildOrder(parentOrder, qtyLeft);
       childOrders.push(finalChildOrder);
     } else {
