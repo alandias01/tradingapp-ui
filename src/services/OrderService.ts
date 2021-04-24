@@ -77,6 +77,8 @@ export interface IChildOrder {
   orderQty: number;
   filledQty: number;
   unfilledQty: number;
+  parentCumQty: number;
+  parentLeavesQty: number;
   avgPrice: number;
   tradeDate: Date;
   tif: Tif;
@@ -118,13 +120,25 @@ export interface IOrderUpdateEvent {
 }
 
 class OrderService {
+  private NextOrderId: number = 0;
+  private myPromise: Promise<number> = Promise.resolve(0);
+  private OrderSubject: Subject<IOrderUpdateEvent> = new Subject<IOrderUpdateEvent>();
+
   ParentOrders: IParentOrder[] = [];
   ChildOrders: IChildOrder[] = [];
   ExecutionOrders: IExecutionOrder[] = [];
 
-  ExecutionAdd: Observable<IOrderUpdateEvent>;
+  ExecutionAdd!: Observable<IOrderUpdateEvent>;
+  ChildAdd!: Observable<IOrderUpdateEvent>;
+  ChildUpdate!: Observable<IOrderUpdateEvent>;
+  ParentAdd!: Observable<IOrderUpdateEvent>;
+  ParentUpdate!: Observable<IOrderUpdateEvent>;
 
   constructor() {
+    this.initObservables();
+  }
+
+  private initObservables() {
     this.ExecutionAdd = this.OrderSubject.pipe(
       filter(
         (x) =>
@@ -132,11 +146,38 @@ class OrderService {
           x.orderUpdateType === OrderUpdateType.ADD
       )
     );
+
+    this.ChildAdd = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.CHILD &&
+          x.orderUpdateType === OrderUpdateType.ADD
+      )
+    );
+
+    this.ChildUpdate = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.CHILD &&
+          x.orderUpdateType === OrderUpdateType.UPDATE
+      )
+    );
+
+    this.ParentAdd = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.PARENT &&
+          x.orderUpdateType === OrderUpdateType.ADD
+      )
+    );
+    this.ParentUpdate = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.PARENT &&
+          x.orderUpdateType === OrderUpdateType.UPDATE
+      )
+    );
   }
-
-  OrderSubject: Subject<IOrderUpdateEvent> = new Subject<IOrderUpdateEvent>();
-
-  private NextOrderId: number = 0;
 
   private GetAndIncrementNextOrderId = () => {
     const id = this.NextOrderId.toString();
@@ -144,7 +185,38 @@ class OrderService {
     return id;
   };
 
-  public createParentOrder(newOrder: INewOrder) {
+  private applyExecutionToChildOrder(execution: IExecutionOrder) {
+    const foundChildOrder = this.ChildOrders.find(
+      (co) => co.childId === execution.childId
+    );
+
+    if (!foundChildOrder) return;
+
+    foundChildOrder.ordStatus = execution.ordStatus;
+    foundChildOrder.filledQty = execution.cumQty;
+    foundChildOrder.unfilledQty = execution.leavesQty;
+    foundChildOrder.avgPrice = execution.avgPx;
+    const childrenOfParent = this.ChildOrders.filter(
+      (x) => x.parentId === foundChildOrder.parentId
+    );
+
+    const sum = childrenOfParent
+      ?.map((x) => x.filledQty)
+      .reduce((x, y) => x + y);
+    childrenOfParent?.forEach((x) => (x.parentCumQty = sum));
+    foundChildOrder.parentCumQty = sum;
+
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.CHILD,
+      orderUpdateType: OrderUpdateType.UPDATE,
+      payload: foundChildOrder,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
+  private applyChildUpdateToParentOrder(childOrder: IChildOrder) {}
+
+  public createParentOrderObject(newOrder: INewOrder) {
     const parentId = this.GetAndIncrementNextOrderId();
     const tradeDate = new Date(Date.now());
     const { moniker, symbol, side, algo, ordType, orderQty, tif } = newOrder;
@@ -159,7 +231,7 @@ class OrderService {
       orderQty,
       tif,
       filledQty: 0,
-      unfilledQty: 0,
+      unfilledQty: orderQty,
       isFilled: "N",
       marketPrice: 0,
       position: 0,
@@ -169,58 +241,63 @@ class OrderService {
     return newParentOrder;
   }
 
-  private applyExecutionToChildOrder(execution: IExecutionOrder) {
-    const foundChildOrder = this.ChildOrders.find(
-      (co) => co.childId === execution.childId
-    );
-    if (!foundChildOrder) return;
+  private addToExecutions(order: IExecutionOrder) {
+    this.ExecutionOrders.push(order);
 
-    foundChildOrder.ordStatus = execution.ordStatus;
-    foundChildOrder.filledQty = execution.cumQty;
-    foundChildOrder.unfilledQty = execution.leavesQty;
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.EXECUTION,
+      orderUpdateType: OrderUpdateType.ADD,
+      payload: order,
+    };
+
+    this.myPromise = this.myPromise.then(async () => {
+      await TaskDelay(300);
+      this.OrderSubject.next(orderEvent);
+      this.applyExecutionToChildOrder(order);
+      return 1;
+    });
   }
 
-  public NewParentOrder(newOrder: INewOrder) {
-    try {
-      const newParentOrder: IParentOrder = this.createParentOrder(newOrder);
+  private addToChildOrders(order: IChildOrder) {
+    this.ChildOrders.push(order);
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.CHILD,
+      orderUpdateType: OrderUpdateType.ADD,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
 
-      this.ParentOrders.push(newParentOrder);
+  private addToParentOrders(parentOrder: IParentOrder) {
+    this.ParentOrders.push(parentOrder);
+    const addParentOrderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.PARENT,
+      orderUpdateType: OrderUpdateType.ADD,
+      payload: parentOrder,
+    };
+    this.OrderSubject.next(addParentOrderEvent);
+  }
+
+  public NewOrder(newOrder: INewOrder) {
+    try {
+      const newParentOrder: IParentOrder = this.createParentOrderObject(
+        newOrder
+      );
+
+      this.addToParentOrders(newParentOrder);
 
       if (newOrder.algo !== Algo.NONE) {
         const childOrders = algoService.ProcessAlgoOrder(newParentOrder);
-        childOrders.forEach((x) => this.ChildOrders.push(x));
+        childOrders.forEach((co) => this.addToChildOrders(co));
 
         childOrders.forEach((childOrder) => {
           const executionOrders = executionService.CreateExecutions(childOrder);
-          executionOrders.forEach((x) => {
-            this.ExecutionOrders.push(x);
-            //this.applyExecutionToChildOrder(x);
-
-            //todo: Since applyExecutionToChildOrder() is updating the grid quickly, the below publish updates the grid again
-            //Send a complete msg to the component to notify when it can start accepting updates
-
-            const orderEvent: IOrderUpdateEvent = {
-              typeOfOrder: TypeOfOrder.EXECUTION,
-              orderUpdateType: OrderUpdateType.ADD,
-              payload: x,
-            };
-            this.addExecution(orderEvent);
-          });
+          executionOrders.forEach((eo) => this.addToExecutions(eo));
         });
       }
     } catch (error) {
       console.log(error);
     }
-  }
-
-  myPromise: Promise<number> = Promise.resolve(0);
-
-  addExecution(orderEvent: IOrderUpdateEvent) {
-    this.myPromise = this.myPromise.then(async () => {
-      await TaskDelay(100);
-      this.OrderSubject.next(orderEvent);
-      return 1;
-    });
   }
 }
 
@@ -255,9 +332,9 @@ const defaultParentOrders: INewOrder[] = [
 ];
 
 const orderService = new OrderService();
-defaultParentOrders.forEach((x) => orderService.NewParentOrder(x));
+//defaultParentOrders.forEach((x) => orderService.NewOrder(x));
 
-export const dummyParentOrder = orderService.createParentOrder(
+export const dummyParentOrder = orderService.createParentOrderObject(
   defaultParentOrders[0]
 );
 export const dummyChildOrder = algoService.createChildOrder(

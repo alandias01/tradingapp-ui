@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import orderService, { IParentOrder, dummyParentOrder } from '../../services/OrderService';
+import orderService, { IParentOrder, IChildOrder, dummyParentOrder, IOrderUpdateEvent } from '../../services/OrderService';
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -21,52 +21,50 @@ export function ParentOrderComponent() {
   const getCols = () => Object.keys(dummyParentOrder).map(key => ({ field: key }));
 
   useEffect(() => {
+    if (gridApi) {
+      const parentAdd = (orderEvent: IOrderUpdateEvent) => {
+        const order = orderEvent.payload as IParentOrder;
+        gridApi?.applyTransaction({ add: [order] });
+      };
+
+      const parentUpdate = (orderEvent: IOrderUpdateEvent) => {
+        const order = orderEvent.payload as IParentOrder;
+        const rowNode = gridApi?.getRowNode(order.parentId);
+        if (!rowNode) return;
+
+        const data: IParentOrder = rowNode.data;
+        data.filledQty = order.filledQty;
+        gridApi?.applyTransaction({ update: [data] });
+      };
+
+      orderService.ParentAdd.subscribe({ next: parentAdd });
+      orderService.ParentUpdate.subscribe({ next: parentUpdate });
+    }
+
+  }, [gridApi])
+
+  useEffect(() => {
     setRowData(orderService.ParentOrders);
     const columnsTemp = getCols();
     setColumns(columnsTemp);
     if (gridColumnApi) {
+      const adjustColumns = () => {
+        const allColumnIds: string[] = [];
+        const allColumns = gridColumnApi.getAllColumns();
+        if (allColumns) {
+          allColumns.forEach((column: Column) => {
+            allColumnIds.push(column.getColId());
+          });
+
+          gridColumnApi.autoSizeColumns(allColumnIds, false);
+        }
+        else {
+          console.log("allColumns was null")
+        }
+      }
       adjustColumns();
     }
-    /*
-    if (gridApi) {
-      const addRowTransaction = (position: IPosition, updateType: PositionUpdateType) => {
-        switch (updateType) {
-          case PositionUpdateType.UPDATE:
-            gridApi?.applyTransaction({ update: [position] });
-            break;
-          case PositionUpdateType.ADD:
-            gridApi?.applyTransaction({ add: [position] });
-            break;
-          case PositionUpdateType.REMOVE:
-            gridApi?.applyTransaction({ remove: [position] });
-            break;
-          default:
-            break;
-        }
-      };
-
-      PositionService.onPositionUpdate(addRowTransaction);
-     
-  }
- */
-  }, [gridColumnApi]);
-
-  const adjustColumns = () => {
-    if (gridColumnApi) {
-      const allColumnIds: string[] = [];
-      const allColumns = gridColumnApi.getAllColumns();
-      if (allColumns) {
-        allColumns.forEach((column: Column) => {
-          allColumnIds.push(column.getColId());
-        });
-
-        gridColumnApi.autoSizeColumns(allColumnIds, false);
-      }
-      else {
-        console.log("allColumns was null")
-      }
-    }
-  }
+  }, [gridColumnApi, gridApi]);
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);

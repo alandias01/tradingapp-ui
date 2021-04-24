@@ -32,7 +32,7 @@ export function CreateOrder() {
   }, [selectedSecurity]);
 
   const handleSubmit = () => {
-    orderService.NewParentOrder({ moniker, symbol, side, algo, ordType, orderQty, tif });
+    orderService.NewOrder({ moniker, symbol, side, algo, ordType, orderQty, tif });
   };
 
   return (

@@ -16,23 +16,6 @@ export function ChildOrderComponent() {
   const [columns, setColumns] = useState<{ field: string }[]>();
   const { gridEvent, setGridEvent } = useGridEventContext();
 
-  const adjustColumns = () => {
-    if (gridColumnApi) {
-      const allColumnIds: string[] = [];
-      const allColumns = gridColumnApi.getAllColumns();
-      if (allColumns) {
-        allColumns.forEach((column: Column) => {
-          allColumnIds.push(column.getColId());
-        });
-
-        gridColumnApi.autoSizeColumns(allColumnIds, false);
-      }
-      else {
-        console.log("allColumns was null")
-      }
-    }
-  }
-
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
   const getCols = () => Object.keys(dummyChildOrder).map(key => ({ field: key }));
@@ -42,52 +25,58 @@ export function ChildOrderComponent() {
     setGridColumnApi(params.columnApi);
   };
 
-  const next = (orderEvent: IOrderUpdateEvent) => {
-    const eo = orderEvent.payload as IExecutionOrder;
-    const rowNode = gridApi?.getRowNode(eo.childId);
-    if (!rowNode) return;
-
-    const data: IChildOrder = rowNode.data;
-    data.ordStatus = eo.ordStatus;
-    data.filledQty = eo.cumQty;
-    data.unfilledQty = eo.leavesQty;
-    data.avgPrice = eo.avgPx;
-    gridApi?.applyTransaction({ update: [data] });
-  };
-
-  orderService.ExecutionAdd.subscribe({ next });
-
   useEffect(() => {
     setRowData(orderService.ChildOrders);
     const columnsTemp = getCols();
     setColumns(columnsTemp);
     if (gridColumnApi) {
-      adjustColumns();
-    }
+      const adjustColumns = () => {
+        const allColumnIds: string[] = [];
+        const allColumns = gridColumnApi.getAllColumns();
+        if (allColumns) {
+          allColumns.forEach((column: Column) => {
+            allColumnIds.push(column.getColId());
+          });
 
-    /*
-    if (gridApi) {
-      const addRowTransaction = (position: IPosition, updateType: PositionUpdateType) => {
-        switch (updateType) {
-          case PositionUpdateType.UPDATE:
-            gridApi?.applyTransaction({ update: [position] });
-            break;
-          case PositionUpdateType.ADD:
-            gridApi?.applyTransaction({ add: [position] });
-            break;
-          case PositionUpdateType.REMOVE:
-            gridApi?.applyTransaction({ remove: [position] });
-            break;
-          default:
-            break;
+          gridColumnApi.autoSizeColumns(allColumnIds, false);
         }
+        else {
+          console.log("allColumns was null")
+        }
+      }
+      adjustColumns();
+      gridColumnApi.setColumnsVisible(["parentCumQty", "parentLeavesQty"], false);
+    }
+  }, [gridColumnApi]);
+
+  useEffect(() => {
+    if (gridApi) {
+      const childAdd = (orderEvent: IOrderUpdateEvent) => {
+        const order = orderEvent.payload as IChildOrder;
+        gridApi?.applyTransaction({ add: [order] });
       };
 
-      PositionService.onPositionUpdate(addRowTransaction);
+      const childUpdate = (orderEvent: IOrderUpdateEvent) => {
+        const order = orderEvent.payload as IChildOrder;
+        const rowNode = gridApi?.getRowNode(order.childId);
+        if (!rowNode) return;
 
+        const data: IChildOrder = rowNode.data;
+        data.ordStatus = order.ordStatus;
+        data.filledQty = order.filledQty;
+        data.unfilledQty = order.unfilledQty;
+        data.avgPrice = order.avgPrice;
+        //data.parentCumQty = order.parentCumQty;
+        //data.parentLeavesQty = order.parentLeavesQty;
+
+        gridApi?.applyTransaction({ update: [data] });
+      };
+
+      orderService.ChildAdd.subscribe({ next: childAdd });
+      orderService.ChildUpdate.subscribe({ next: childUpdate });
     }
-    */
-  }, [gridColumnApi]);
+
+  }, [gridApi])
 
   useEffect(() => {
     if (gridApi && gridEvent.rowSelectedParent) {
@@ -98,7 +87,7 @@ export function ChildOrderComponent() {
       }
     }
 
-  }, [gridEvent])
+  }, [gridApi, gridEvent])
 
   const onSelectionChanged = () => {
     const selectedRows = gridApi?.getSelectedRows();

@@ -23,6 +23,8 @@ class AlgoService {
       orderQty,
       filledQty: parentOrder.filledQty,
       unfilledQty: parentOrder.unfilledQty,
+      parentCumQty: 0,
+      parentLeavesQty: 0,
       avgPrice: parentOrder.marketPrice,
       tradeDate: new Date(Date.now()),
       tif: parentOrder.tif,

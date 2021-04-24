@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
-import orderService, { IExecutionOrder, dummyExecutionOrder } from "../../services/OrderService";
+import orderService, { IExecutionOrder, dummyExecutionOrder, IOrderUpdateEvent } from "../../services/OrderService";
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -25,31 +25,36 @@ export function ExecutionComponent() {
     const columnsTemp = getCols();
     setColumns(columnsTemp);
     if (gridColumnApi) {
+      const adjustColumns = () => {
+        const allColumnIds: string[] = [];
+        const allColumns = gridColumnApi.getAllColumns();
+        if (allColumns) {
+          allColumns.forEach((column: Column) => {
+            allColumnIds.push(column.getColId());
+          });
+
+          gridColumnApi.autoSizeColumns(allColumnIds, false);
+        }
+        else {
+          console.log("allColumns was null")
+        }
+      }
       adjustColumns();
     }
-    /*
+
+  }, [gridColumnApi]);
+
+  useEffect(() => {
     if (gridApi) {
-      const addRowTransaction = (position: IPosition, updateType: PositionUpdateType) => {
-        switch (updateType) {
-          case PositionUpdateType.UPDATE:
-            gridApi?.applyTransaction({ update: [position] });
-            break;
-          case PositionUpdateType.ADD:
-            gridApi?.applyTransaction({ add: [position] });
-            break;
-          case PositionUpdateType.REMOVE:
-            gridApi?.applyTransaction({ remove: [position] });
-            break;
-          default:
-            break;
-        }
+      const executionAdd = (orderEvent: IOrderUpdateEvent) => {
+        const order = orderEvent.payload as IExecutionOrder;
+        gridApi?.applyTransaction({ add: [order] });
       };
 
-      PositionService.onPositionUpdate(addRowTransaction);
+      orderService.ExecutionAdd.subscribe({ next: executionAdd });
+    }
 
-    }    
-    */
-  }, [gridColumnApi]);
+  }, [gridApi])
 
   useEffect(() => {
     if (gridApi && gridEvent.rowSelectedChild) {
@@ -60,24 +65,7 @@ export function ExecutionComponent() {
       }
     }
 
-  }, [gridEvent])
-
-  const adjustColumns = () => {
-    if (gridColumnApi) {
-      const allColumnIds: string[] = [];
-      const allColumns = gridColumnApi.getAllColumns();
-      if (allColumns) {
-        allColumns.forEach((column: Column) => {
-          allColumnIds.push(column.getColId());
-        });
-
-        gridColumnApi.autoSizeColumns(allColumnIds, false);
-      }
-      else {
-        console.log("allColumns was null")
-      }
-    }
-  }
+  }, [gridApi, gridEvent])
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
