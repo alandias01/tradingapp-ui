@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
 import orderService, { IParentOrder, IChildOrder, dummyParentOrder, IOrderUpdateEvent } from '../../services/OrderService';
+import realtTimeMarketData from '../../services/RealTimeMarketData';
+import { ISecurityMasterService, SecurityMasterService } from '../../services/SecurityMasterService';
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -42,6 +44,31 @@ export function ParentOrderComponent() {
     }
 
   }, [gridApi])
+
+  useEffect(() => {
+    if (!gridApi)
+      return;
+
+    const realtTimeUpdate = (stock: ISecurityMasterService[]) => {
+      if (!rowData?.length)
+        return;
+
+      gridApi.forEachNode(rowNode => {
+        const order: IParentOrder = rowNode.data;
+        const securityFound = stock.find(s => s.SYMBOL === order.symbol);
+        if (securityFound) {
+          order.marketPrice = securityFound.DefaultPrice;
+          order.position = order.marketPrice * order.filledQty;
+        }
+      });
+
+      gridApi.refreshCells();
+    };
+
+    realtTimeMarketData.stockPrices.subscribe(realtTimeUpdate)
+
+
+  }, [gridApi, rowData])
 
   useEffect(() => {
     setRowData(orderService.ParentOrders);
