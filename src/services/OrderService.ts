@@ -206,15 +206,41 @@ class OrderService {
     childrenOfParent?.forEach((x) => (x.parentCumQty = sum));
     foundChildOrder.parentCumQty = sum;
 
+    const sumLeaves = childrenOfParent
+      ?.map((x) => x.unfilledQty)
+      .reduce((x, y) => x + y);
+    childrenOfParent?.forEach((x) => (x.parentLeavesQty = sumLeaves));
+    foundChildOrder.parentLeavesQty = sumLeaves;
+
     const orderEvent: IOrderUpdateEvent = {
       typeOfOrder: TypeOfOrder.CHILD,
       orderUpdateType: OrderUpdateType.UPDATE,
       payload: foundChildOrder,
     };
     this.OrderSubject.next(orderEvent);
+
+    this.applyChildUpdateToParentOrder(foundChildOrder);
   }
 
-  private applyChildUpdateToParentOrder(childOrder: IChildOrder) {}
+  private applyChildUpdateToParentOrder(childOrder: IChildOrder) {
+    const foundParentOrder = this.ParentOrders.find(
+      (po) => po.parentId === childOrder.parentId
+    );
+
+    if (!foundParentOrder) return;
+    foundParentOrder.filledQty = childOrder.parentCumQty;
+    foundParentOrder.unfilledQty = childOrder.parentLeavesQty;
+    if (foundParentOrder.orderQty === foundParentOrder.filledQty) {
+      foundParentOrder.isFilled = "Y";
+    }
+
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.PARENT,
+      orderUpdateType: OrderUpdateType.UPDATE,
+      payload: foundParentOrder,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
 
   public createParentOrderObject(newOrder: INewOrder) {
     const parentId = this.GetAndIncrementNextOrderId();
