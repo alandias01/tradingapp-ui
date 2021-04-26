@@ -12,7 +12,7 @@ const useStylesTopBar = makeStyles((theme: Theme) => ({
   }
 }));
 
-export function TopBar(props: { setDrawerOpen: (val: boolean) => void }) {
+export function TopBar(props: { setDrawerOpen: (val: boolean) => void, setView: (val: string) => void }) {
   const classes = useStylesTopBar();
   return (
     <AppBar position="static">
@@ -23,6 +23,8 @@ export function TopBar(props: { setDrawerOpen: (val: boolean) => void }) {
         <Typography variant="subtitle1" className={classes.title}>
           Trading UI
         </Typography>
+        <Button style={{ margin: "0px 5px" }} variant="outlined" onClick={() => props.setView("orders")} >Orders </Button>
+        <Button variant="outlined" onClick={() => props.setView("dashboard")} >Dashboard</Button>
         <IconButton
           aria-label="account of current user"
           aria-controls="menu-appbar"

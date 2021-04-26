@@ -71,13 +71,14 @@ const useStyleGrid = makeStyles(() => ({
 export function Main() {
   const classes = useStyleGrid();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [view, setView] = useState("orders");
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <SelectedSecurityProvider>
         <GridEventProvider>
-          <TopBar setDrawerOpen={setDrawerOpen} />
+          <TopBar setDrawerOpen={setDrawerOpen} setView={setView} />
           <div style={{ margin: 20 }}>
             <Grid container spacing={2} alignItems="stretch">
               <Grid item xs={12} sm={4} className={classes.gridLeftMax}>
@@ -94,7 +95,7 @@ export function Main() {
                 </Grid>
               </Grid>
               <Grid item xs={12} sm={8} className={classes.gridRightMax}>
-                <OrderGridComponent />
+                {view === "orders" ? <OrderGridComponent /> : <div>nothing</div>}
               </Grid>
               {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
             </Grid>
