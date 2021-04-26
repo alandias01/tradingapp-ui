@@ -1,5 +1,6 @@
 import algoService from "./AlgoService";
 import executionService from "./ExecutionService";
+import { PositionService2 } from "./PositionService2";
 import { Subject, PartialObserver, Observable } from "rxjs";
 import { filter } from "rxjs/operators";
 import { TaskDelay } from "../utils/util";
@@ -56,6 +57,14 @@ export interface INewOrder {
   tif: Tif;
 }
 
+export interface IPosition {
+  positionId: string;
+  symbol: string;
+  quantity: number;
+  price: number;
+  position: number;
+}
+
 export interface IParentOrder extends INewOrder {
   parentId: string;
   filledQty: number;
@@ -105,6 +114,7 @@ export enum TypeOfOrder {
   PARENT = "PARENT",
   CHILD = "CHILD",
   EXECUTION = "EXECUTION",
+  POSITION = "POSITION",
 }
 
 export enum OrderUpdateType {
@@ -123,7 +133,9 @@ class OrderService {
   private NextOrderId: number = 0;
   private myPromise: Promise<number> = Promise.resolve(0);
   private OrderSubject: Subject<IOrderUpdateEvent> = new Subject<IOrderUpdateEvent>();
+  private positionservice: PositionService2;
 
+  Positions: IPosition[];
   ParentOrders: IParentOrder[] = [];
   ChildOrders: IChildOrder[] = [];
   ExecutionOrders: IExecutionOrder[] = [];
@@ -136,6 +148,8 @@ class OrderService {
 
   constructor() {
     this.initObservables();
+    this.positionservice = new PositionService2(this.OrderSubject);
+    this.Positions = this.positionservice.Positions;
   }
 
   private initObservables() {
@@ -242,6 +256,9 @@ class OrderService {
     this.OrderSubject.next(orderEvent);
   }
 
+  public createDummyPositionObject = (order: IParentOrder) =>
+    this.positionservice.createPositionObject(order);
+
   public createParentOrderObject(newOrder: INewOrder) {
     const parentId = this.GetAndIncrementNextOrderId();
     const tradeDate = new Date(Date.now());
@@ -311,6 +328,7 @@ class OrderService {
       );
 
       this.addToParentOrders(newParentOrder);
+      this.positionservice.updatePosition(newParentOrder);
 
       if (newOrder.algo !== Algo.NONE) {
         const childOrders = algoService.ProcessAlgoOrder(newParentOrder);
@@ -363,6 +381,11 @@ const orderService = new OrderService();
 export const dummyParentOrder = orderService.createParentOrderObject(
   defaultParentOrders[0]
 );
+
+export const dummyPositionOrder = orderService.createDummyPositionObject(
+  dummyParentOrder
+);
+
 export const dummyChildOrder = algoService.createChildOrder(
   dummyParentOrder,
   0
