@@ -24,7 +24,7 @@ export function CreateOrder() {
   const [side, setSide] = useState<Side>(Side.BUY);
   const [algo, setAlgo] = useState(Algo.BLOCK)
   const [ordType, setOrdType] = useState<OrdType>(OrdType.MARKET);
-  const [orderQty, setOrderQty] = useState<number>(1);
+  const [orderQty, setOrderQty] = useState<number>(160);
   const [tif, setTif] = useState<Tif>(Tif.DAY);
 
   useEffect(() => {

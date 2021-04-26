@@ -43,7 +43,7 @@ const theme = createMuiTheme({
     },
     MuiOutlinedInput: {
       input: {
-        padding: "10px 14px"
+        padding: "8px 14px"
       }
     }
   }
@@ -86,10 +86,10 @@ export function Main() {
                     <SelectSecurityComponent />
                   </Grid>
                   <Grid item xs={12}>
-                    <Level2DataComponent />
+                    <CreateOrder />
                   </Grid>
                   <Grid item xs={12}>
-                    <CreateOrder />
+                    <Level2DataComponent />
                   </Grid>
                 </Grid>
               </Grid>
