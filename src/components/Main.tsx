@@ -15,7 +15,7 @@ import { TopBar } from './TopBar';
 import { SelectedSecurityProvider } from '../Context/SelectedSecurityContext';
 import { GridEventProvider } from '../Context/GridEventContext';
 import { OrderGridComponent } from './OrderGrid/OrderGirdComponent';
-import { PositionComponent } from './Dashboard/PositionComponent'
+import { DashboardComponent } from './Dashboard/DashboardComponent'
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
@@ -96,7 +96,7 @@ export function Main() {
                 </Grid>
               </Grid>
               <Grid item xs={12} sm={8} className={classes.gridRightMax}>
-                {view === "orders" ? <OrderGridComponent /> : <PositionComponent />}
+                {view === "orders" ? <OrderGridComponent /> : <DashboardComponent />}
               </Grid>
               {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
             </Grid>
