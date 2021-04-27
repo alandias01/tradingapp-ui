@@ -3,6 +3,7 @@ import { FormControl, Card, CardHeader, CardContent, TextField, makeStyles, crea
 
 import orderService, { Algo, Moniker, Side, OrdType, Tif } from '../services/OrderService';
 import { useSelectedSecurityContext } from '../Context/SelectedSecurityContext';
+import { ViewType } from "./Main";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -15,7 +16,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export function CreateOrder() {
+export function CreateOrder(props: { view: ViewType }) {
   const classes = useStyles();
   const { selectedSecurity } = useSelectedSecurityContext();
 
@@ -34,6 +35,8 @@ export function CreateOrder() {
   const handleSubmit = () => {
     orderService.NewOrder({ moniker, symbol, side, algo, ordType, orderQty, tif });
   };
+
+  const submitEnabled = () => props.view !== ViewType.ORDERS;
 
   return (
     <div>
@@ -104,7 +107,7 @@ export function CreateOrder() {
                 {Object.keys(Tif).map(x => <MenuItem key={x} value={x}>{x}</MenuItem>)}
               </Select>
             </FormControl>
-            <Button variant="outlined" onClick={handleSubmit} >SUBMIT</Button>
+            <Button variant="outlined" onClick={handleSubmit} disabled={submitEnabled()} >SUBMIT</Button>
           </form>
         </CardContent>
       </Card>

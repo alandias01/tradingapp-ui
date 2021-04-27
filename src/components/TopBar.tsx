@@ -2,6 +2,7 @@ import React from "react";
 import { AppBar, Toolbar, Button, IconButton, Typography, makeStyles, Theme } from "@material-ui/core"
 import MenuIcon from '@material-ui/icons/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
+import { ViewType } from "./Main";
 
 const useStylesTopBar = makeStyles((theme: Theme) => ({
   menuButton: {
@@ -12,7 +13,7 @@ const useStylesTopBar = makeStyles((theme: Theme) => ({
   }
 }));
 
-export function TopBar(props: { setDrawerOpen: (val: boolean) => void, setView: (val: string) => void }) {
+export function TopBar(props: { setDrawerOpen: (val: boolean) => void, setView: (val: ViewType) => void }) {
   const classes = useStylesTopBar();
   return (
     <AppBar position="static">
@@ -23,8 +24,8 @@ export function TopBar(props: { setDrawerOpen: (val: boolean) => void, setView: 
         <Typography variant="subtitle1" className={classes.title}>
           Trading UI
         </Typography>
-        <Button style={{ margin: "0px 5px" }} variant="outlined" onClick={() => props.setView("orders")} >Orders </Button>
-        <Button variant="outlined" onClick={() => props.setView("dashboard")} >Dashboard</Button>
+        <Button style={{ margin: "0px 5px" }} variant="outlined" onClick={() => props.setView(ViewType.ORDERS)} >Orders </Button>
+        <Button variant="outlined" onClick={() => props.setView(ViewType.DASHBOARD)} >Dashboard</Button>
         <IconButton
           aria-label="account of current user"
           aria-controls="menu-appbar"

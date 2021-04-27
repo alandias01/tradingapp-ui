@@ -19,6 +19,11 @@ import { DashboardComponent } from './Dashboard/DashboardComponent'
 
 const paperColor = Color("#394873").alpha(0.3).string();
 
+export enum ViewType {
+  ORDERS = "ORDERS",
+  DASHBOARD = "DASHBOARD"
+}
+
 const theme = createMuiTheme({
   palette: {
     type: "dark",
@@ -72,7 +77,8 @@ const useStyleGrid = makeStyles(() => ({
 export function Main() {
   const classes = useStyleGrid();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [view, setView] = useState("orders");
+  const [view, setView] = useState<ViewType>(ViewType.ORDERS);
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -88,7 +94,7 @@ export function Main() {
                     <SelectSecurityComponent />
                   </Grid>
                   <Grid item xs={12}>
-                    <CreateOrder />
+                    <CreateOrder view={view} />
                   </Grid>
                   <Grid item xs={12}>
                     <Level2DataComponent />
@@ -96,7 +102,7 @@ export function Main() {
                 </Grid>
               </Grid>
               <Grid item xs={12} sm={8} className={classes.gridRightMax}>
-                {view === "orders" ? <OrderGridComponent /> : <DashboardComponent />}
+                {view === ViewType.ORDERS ? <OrderGridComponent /> : <DashboardComponent />}
               </Grid>
               {/* <Grid item xs={12} sm={4} className={classes.root}></Grid> */}
             </Grid>
