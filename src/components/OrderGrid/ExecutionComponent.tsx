@@ -17,6 +17,17 @@ export function ExecutionComponent() {
   const { gridEvent } = useGridEventContext();
   const [filterOrdStatus, setFilterOrdStatus] = useState([{ filter: "new", checked: false }, { filter: "partially filled", checked: false }, { filter: "filled", checked: false }]);
 
+  const getCols = () => Object.keys(dummyExecutionOrder).map(key => {
+    if (key === "lastPx" || key === "avgPx") {
+      return ({
+        field: key, valueFormatter: (params: any) => currencyFormatter(params)
+      })
+    }
+    else {
+      return ({ field: key })
+    }
+  });
+
   useEffect(() => {
     setRowData(orderService.ExecutionOrders);
     const columnsTemp = getCols();
@@ -104,7 +115,6 @@ export function ExecutionComponent() {
   }, [gridApi, filterOrdStatus])
 
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
-  const getCols = () => Object.keys(dummyExecutionOrder).map(key => ({ field: key }));
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -116,6 +126,12 @@ export function ExecutionComponent() {
     const data = filterOrdStatus.map(x => x.filter === name ? ({ ...x, checked }) : x);
     setFilterOrdStatus(data);
   };
+
+  function currencyFormatter(params: any) {
+    var sansDec = params.value.toFixed(0);
+    var formatted = sansDec.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '$' + formatted;
+  }
 
   return (
     <div style={{ height: "100%" }}>

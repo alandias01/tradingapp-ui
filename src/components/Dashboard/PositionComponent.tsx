@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
 import orderService, { dummyPositionOrder, IOrderUpdateEvent, IPosition } from '../../services/OrderService';
 import realtTimeMarketData from '../../services/RealTimeMarketData';
+import { ISecurityMasterService } from '../../services/SecurityMasterService';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
 
@@ -15,7 +16,16 @@ export function PositionComponent() {
   const [gridColumnApi, setGridColumnApi] = useState<ColumnApi>();
   const [columns, setColumns] = useState<{ field: string }[]>();
 
-  const getCols = () => Object.keys(dummyPositionOrder).map(key => ({ field: key }));
+  const getCols = () => Object.keys(dummyPositionOrder).map(key => {
+    if (key === "price" || key === "position") {
+      return ({
+        field: key, valueFormatter: (params: any) => currencyFormatter(params)
+      })
+    }
+    else {
+      return ({ field: key })
+    }
+  });
 
   useEffect(() => {
     setRowData(orderService.Positions);
@@ -49,11 +59,40 @@ export function PositionComponent() {
 
   }, [gridApi])
 
+  useEffect(() => {
+    if (!gridApi)
+      return;
+
+    const realtTimeUpdate = (stock: ISecurityMasterService[]) => {
+      if (!rowData?.length)
+        return;
+
+      gridApi.forEachNode(rowNode => {
+        const order: IPosition = rowNode.data;
+        const securityFound = stock.find(s => s.SYMBOL === order.symbol);
+        if (securityFound) {
+          order.price = securityFound.DefaultPrice;
+          order.position = order.price * order.quantity;
+        }
+      });
+
+      gridApi.refreshCells();
+    };
+
+    realtTimeMarketData.stockPrices.subscribe(realtTimeUpdate);
+  }, [gridApi, rowData])
+
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
     setGridColumnApi(params.columnApi);
   };
+
+  function currencyFormatter(params: any) {
+    var sansDec = params.value.toFixed(0);
+    var formatted = sansDec.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '$' + formatted;
+  }
 
   return (
     <div style={{ height: "100%" }}>

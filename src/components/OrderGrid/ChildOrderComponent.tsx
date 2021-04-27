@@ -18,7 +18,16 @@ export function ChildOrderComponent() {
 
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
-  const getCols = () => Object.keys(dummyChildOrder).map(key => ({ field: key }));
+  const getCols = () => Object.keys(dummyChildOrder).map(key => {
+    if (key === "avgPrice") {
+      return ({
+        field: key, valueFormatter: (params: any) => currencyFormatter(params)
+      })
+    }
+    else {
+      return ({ field: key })
+    }
+  });
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -92,6 +101,12 @@ export function ChildOrderComponent() {
   const onSelectionChanged = () => {
     const selectedRows = gridApi?.getSelectedRows();
     setGridEvent({ rowSelectedChild: selectedRows })
+  }
+
+  function currencyFormatter(params: any) {
+    var sansDec = params.value.toFixed(0);
+    var formatted = sansDec.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '$' + formatted;
   }
 
   return (

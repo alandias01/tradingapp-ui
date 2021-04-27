@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AgGridColumn, AgGridReact } from "ag-grid-react";
 import orderService, { IParentOrder, IChildOrder, dummyParentOrder, IOrderUpdateEvent } from '../../services/OrderService';
 import realtTimeMarketData from '../../services/RealTimeMarketData';
-import { ISecurityMasterService, SecurityMasterService } from '../../services/SecurityMasterService';
+import { ISecurityMasterService } from '../../services/SecurityMasterService';
 import { useGridEventContext } from '../../Context/GridEventContext';
 import { ColumnApi, GridApi, GridReadyEvent, Column } from "ag-grid-community";
 import { Button, Typography } from '@material-ui/core';
@@ -29,8 +29,7 @@ export function ParentOrderComponent() {
     else {
       return ({ field: key })
     }
-  }
-  );
+  });
 
   useEffect(() => {
     if (gridApi) {
@@ -75,9 +74,7 @@ export function ParentOrderComponent() {
       gridApi.refreshCells();
     };
 
-    realtTimeMarketData.stockPrices.subscribe(realtTimeUpdate)
-
-
+    realtTimeMarketData.stockPrices.subscribe(realtTimeUpdate);
   }, [gridApi, rowData])
 
   useEffect(() => {
