@@ -20,7 +20,17 @@ export function ParentOrderComponent() {
 
   const handleClick_ClearFilters = () => gridApi?.setFilterModel(null);
 
-  const getCols = () => Object.keys(dummyParentOrder).map(key => ({ field: key }));
+  const getCols = () => Object.keys(dummyParentOrder).map(key => {
+    if (key === "marketPrice" || key === "position") {
+      return ({
+        field: key, valueFormatter: (params: any) => currencyFormatter(params)
+      })
+    }
+    else {
+      return ({ field: key })
+    }
+  }
+  );
 
   useEffect(() => {
     if (gridApi) {
@@ -103,6 +113,12 @@ export function ParentOrderComponent() {
   const onSelectionChanged = () => {
     const selectedRows = gridApi?.getSelectedRows();
     setGridEvent({ rowSelectedParent: selectedRows })
+  }
+
+  function currencyFormatter(params: any) {
+    var sansDec = params.value.toFixed(0);
+    var formatted = sansDec.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '$' + formatted;
   }
 
   return (
