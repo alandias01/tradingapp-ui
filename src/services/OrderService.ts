@@ -1,6 +1,6 @@
 import algoService from "./AlgoService";
 import executionService from "./ExecutionService";
-import { PositionService2 } from "./PositionService2";
+import { PositionService } from "./PositionService";
 import { Subject, PartialObserver, Observable } from "rxjs";
 import { filter } from "rxjs/operators";
 import { TaskDelay } from "../utils/util";
@@ -133,7 +133,7 @@ class OrderService {
   private NextOrderId: number = 0;
   private myPromise: Promise<number> = Promise.resolve(0);
   private OrderSubject: Subject<IOrderUpdateEvent> = new Subject<IOrderUpdateEvent>();
-  private positionservice: PositionService2;
+  private positionservice: PositionService;
 
   Positions: IPosition[];
   ParentOrders: IParentOrder[] = [];
@@ -150,7 +150,7 @@ class OrderService {
   PositionRemove!: Observable<IOrderUpdateEvent>;
 
   constructor() {
-    this.positionservice = new PositionService2(this.OrderSubject);
+    this.positionservice = new PositionService(this.OrderSubject);
     this.initObservables();
     this.Positions = this.positionservice.Positions;
   }

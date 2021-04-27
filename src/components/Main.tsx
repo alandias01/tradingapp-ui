@@ -15,7 +15,7 @@ import { TopBar } from './TopBar';
 import { SelectedSecurityProvider } from '../Context/SelectedSecurityContext';
 import { GridEventProvider } from '../Context/GridEventContext';
 import { OrderGridComponent } from './OrderGrid/OrderGirdComponent';
-import { PositionComponent } from './Dashboard/PositionComponent2'
+import { PositionComponent } from './Dashboard/PositionComponent'
 
 const paperColor = Color("#394873").alpha(0.3).string();
 

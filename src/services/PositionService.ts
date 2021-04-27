@@ -1,120 +1,121 @@
-/* 
-Pie chart for positions, which position is biggest
-Create account for allocations
-*/
+import {
+  Side,
+  IOrderUpdateEvent,
+  TypeOfOrder,
+  OrderUpdateType,
+  IPosition,
+  IParentOrder,
+} from "./OrderService";
+import { Subject, Observable } from "rxjs";
+import { filter } from "rxjs/operators";
 
-import { Side, OrdType, Tif } from "./OrderService";
-
-export enum PositionUpdateType {
-  ADD = "ADD",
-  UPDATE = "UPDATE",
-  REMOVE = "REMOVE",
-}
-
-export interface IPosition {
-  positionId: string;
-  symbol: string;
-  quantity: number;
-  price: number;
-  position: number;
-}
-
-interface INewOrder {
-  side: Side;
-  symbol: string;
-  quantity: number;
-  price: number;
-  ordType: OrdType;
-  tif: Tif;
-}
-
-interface IOrder extends INewOrder {
-  orderId: string;
-  orderDate: Date;
-}
-
-type IPositionUpdateObserver = (
-  position: IPosition,
-  updateType: PositionUpdateType
-) => void;
-
-class PositionService {
+export class PositionService {
   Positions: IPosition[] = [];
-  Orders: IOrder[] = [];
-  private PositionUpdateobservers: IPositionUpdateObserver[] = [];
-  NextOrderId: number = 0;
-  NextPositionId: number = 0;
+  private NextPositionId: number = 0;
+  private OrderSubject: Subject<IOrderUpdateEvent>;
 
-  GetAndIncrementNextOrderId = () => {
-    const id = this.NextOrderId.toString();
-    this.NextOrderId++;
-    return id;
-  };
+  PositionAdd!: Observable<IOrderUpdateEvent>;
+  PositionUpdate!: Observable<IOrderUpdateEvent>;
+  PositionRemove!: Observable<IOrderUpdateEvent>;
 
-  GetAndIncrementNextPositionId = () => {
+  constructor(orderSubject: Subject<IOrderUpdateEvent>) {
+    this.OrderSubject = orderSubject;
+    this.initObservables();
+  }
+
+  private initObservables() {
+    this.PositionAdd = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.POSITION &&
+          x.orderUpdateType === OrderUpdateType.ADD
+      )
+    );
+
+    this.PositionUpdate = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.POSITION &&
+          x.orderUpdateType === OrderUpdateType.UPDATE
+      )
+    );
+
+    this.PositionRemove = this.OrderSubject.pipe(
+      filter(
+        (x) =>
+          x.typeOfOrder === TypeOfOrder.POSITION &&
+          x.orderUpdateType === OrderUpdateType.REMOVE
+      )
+    );
+  }
+
+  private GetAndIncrementNextPositionId = () => {
     const id = this.NextPositionId.toString();
     this.NextPositionId++;
     return id;
   };
 
-  NewOrder({
-    side,
-    symbol,
-    quantity,
-    price,
-    ordType,
-    tif = Tif.DAY,
-  }: INewOrder) {
-    try {
-      const orderId = this.GetAndIncrementNextOrderId();
-      const orderDate = new Date(Date.now());
-      const order: IOrder = {
-        side,
-        symbol,
-        quantity,
-        price,
-        ordType,
-        tif,
-        orderId,
-        orderDate,
-      };
-
-      this.Orders.push(order);
-      this.updatePosition(order);
-    } catch (error) {}
+  private raisePositionAdd(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.ADD,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
   }
 
-  private updatePosition(order: IOrder) {
+  private raisePositionUpdate(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.UPDATE,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
+  private raisePositionRemove(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.REMOVE,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
+  public createPositionObject(order: IParentOrder) {
+    const initialPosition = order.orderQty * order.marketPrice;
+
+    const position: IPosition = {
+      positionId: this.GetAndIncrementNextPositionId(),
+      symbol: order.symbol,
+      quantity: order.orderQty,
+      price: order.marketPrice,
+      position: initialPosition,
+    };
+    return position;
+  }
+
+  //todo: get market price, maybe from final execution or market feed simulator
+  public updatePosition(order: IParentOrder) {
     const foundPosition = this.Positions.find((p) => p.symbol === order.symbol);
 
     //UPDATE POSITION
     if (foundPosition) {
       if (order.side === Side.BUY) {
-        foundPosition.price = order.price;
-        foundPosition.quantity += order.quantity;
-        foundPosition.position = foundPosition.quantity * order.price;
-
-        this.raisePositionUpdateObserver(
-          foundPosition,
-          PositionUpdateType.UPDATE
-        );
+        foundPosition.price = order.marketPrice;
+        foundPosition.quantity += order.orderQty;
+        foundPosition.position = foundPosition.quantity * foundPosition.price;
+        this.raisePositionUpdate(foundPosition);
       } else if (order.side === Side.SELL) {
-        if (foundPosition.quantity === order.quantity) {
+        if (foundPosition.quantity === order.orderQty) {
           const positionToRemove = { ...foundPosition };
           this.Positions.splice(this.Positions.indexOf(foundPosition), 1);
-          this.raisePositionUpdateObserver(
-            positionToRemove,
-            PositionUpdateType.REMOVE
-          );
-        } else if (foundPosition.quantity > order.quantity) {
-          foundPosition.price = order.price;
-          foundPosition.quantity -= order.quantity;
-          foundPosition.position = foundPosition.quantity * order.price;
-
-          this.raisePositionUpdateObserver(
-            foundPosition,
-            PositionUpdateType.UPDATE
-          );
+          this.raisePositionRemove(positionToRemove);
+        } else if (foundPosition.quantity > order.orderQty) {
+          foundPosition.price = order.marketPrice;
+          foundPosition.quantity -= order.orderQty;
+          foundPosition.position = foundPosition.quantity * foundPosition.price;
+          this.raisePositionUpdate(foundPosition);
         } else {
           console.log("Cant sell more than you have");
         }
@@ -125,71 +126,12 @@ class PositionService {
       //Create new position
     } else {
       if (order.side === Side.BUY) {
-        const initialPosition = order.quantity * order.price;
-
-        const position: IPosition = {
-          positionId: this.GetAndIncrementNextPositionId(),
-          symbol: order.symbol,
-          quantity: order.quantity,
-          price: order.price,
-          position: initialPosition,
-        };
-
+        const position = this.createPositionObject(order);
         this.Positions.push(position);
-        this.raisePositionUpdateObserver(position, PositionUpdateType.ADD);
+        this.raisePositionAdd(position);
       } else {
         console.log("You cannot sell what you do not own.");
       }
     }
   }
-
-  private raisePositionUpdateObserver(
-    position: IPosition,
-    updateType: PositionUpdateType
-  ) {
-    this.PositionUpdateobservers.forEach((fn) =>
-      fn.call(this, position, updateType)
-    );
-  }
-
-  onPositionUpdate(positionUpdateObserver: IPositionUpdateObserver) {
-    console.log(
-      "Service PositionUpdateobservers length: " +
-        this.PositionUpdateobservers.length
-    );
-    if (this.PositionUpdateobservers.length < 2)
-      this.PositionUpdateobservers.push(positionUpdateObserver);
-  }
 }
-
-const defaultOrders: INewOrder[] = [
-  {
-    side: Side.BUY,
-    symbol: "AAPL",
-    quantity: 100,
-    price: 30,
-    ordType: OrdType.MARKET,
-    tif: Tif.DAY,
-  },
-  {
-    side: Side.BUY,
-    symbol: "NFLX",
-    quantity: 200,
-    price: 40,
-    ordType: OrdType.MARKET,
-    tif: Tif.DAY,
-  },
-  {
-    side: Side.BUY,
-    symbol: "MSFT",
-    quantity: 200,
-    price: 50,
-    ordType: OrdType.MARKET,
-    tif: Tif.DAY,
-  },
-];
-
-const positionService = new PositionService();
-defaultOrders.forEach((x) => positionService.NewOrder(x));
-
-export default positionService;
