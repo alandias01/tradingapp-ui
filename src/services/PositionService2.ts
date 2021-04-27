@@ -1,14 +1,12 @@
 import {
   Side,
-  OrdType,
-  Tif,
   IOrderUpdateEvent,
   TypeOfOrder,
   OrderUpdateType,
   IPosition,
   IParentOrder,
 } from "./OrderService";
-import { Subject, PartialObserver, Observable } from "rxjs";
+import { Subject, Observable } from "rxjs";
 import { filter } from "rxjs/operators";
 
 export class PositionService2 {
@@ -57,6 +55,33 @@ export class PositionService2 {
     return id;
   };
 
+  private raisePositionAdd(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.ADD,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
+  private raisePositionUpdate(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.UPDATE,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
+  private raisePositionRemove(order: IPosition) {
+    const orderEvent: IOrderUpdateEvent = {
+      typeOfOrder: TypeOfOrder.POSITION,
+      orderUpdateType: OrderUpdateType.REMOVE,
+      payload: order,
+    };
+    this.OrderSubject.next(orderEvent);
+  }
+
   public createPositionObject(order: IParentOrder) {
     const initialPosition = order.orderQty * order.marketPrice;
 
@@ -80,17 +105,17 @@ export class PositionService2 {
         foundPosition.price = order.marketPrice;
         foundPosition.quantity += order.orderQty;
         foundPosition.position = foundPosition.quantity * foundPosition.price;
-        //RAISE UPDATE
+        this.raisePositionUpdate(foundPosition);
       } else if (order.side === Side.SELL) {
         if (foundPosition.quantity === order.orderQty) {
           const positionToRemove = { ...foundPosition };
           this.Positions.splice(this.Positions.indexOf(foundPosition), 1);
-          // RAISE REMOVE
+          this.raisePositionRemove(positionToRemove);
         } else if (foundPosition.quantity > order.orderQty) {
           foundPosition.price = order.marketPrice;
           foundPosition.quantity -= order.orderQty;
           foundPosition.position = foundPosition.quantity * foundPosition.price;
-          //RAISE UPDATE
+          this.raisePositionUpdate(foundPosition);
         } else {
           console.log("Cant sell more than you have");
         }
@@ -103,7 +128,7 @@ export class PositionService2 {
       if (order.side === Side.BUY) {
         const position = this.createPositionObject(order);
         this.Positions.push(position);
-        //RAISE ADD
+        this.raisePositionAdd(position);
       } else {
         console.log("You cannot sell what you do not own.");
       }

@@ -40,6 +40,15 @@ export function PositionComponent() {
     }
   }, [gridColumnApi, gridApi]);
 
+  useEffect(() => {
+    if (gridApi) {
+      orderService.PositionAdd.subscribe(() => gridApi?.setRowData(orderService.Positions));
+      orderService.PositionUpdate.subscribe(() => gridApi.refreshCells());
+      orderService.PositionRemove.subscribe(() => gridApi?.setRowData(orderService.Positions));
+    }
+
+  }, [gridApi])
+
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -54,6 +63,7 @@ export function PositionComponent() {
       >
         <Typography variant="h6" display="inline" >Positions</Typography>
         <AgGridReact
+          immutableData={true}
           rowSelection="single"
           rowData={rowData}
           onGridReady={onGridReady}

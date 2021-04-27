@@ -126,7 +126,7 @@ export enum OrderUpdateType {
 export interface IOrderUpdateEvent {
   typeOfOrder: TypeOfOrder;
   orderUpdateType: OrderUpdateType;
-  payload: IParentOrder | IChildOrder | IExecutionOrder;
+  payload: IPosition | IParentOrder | IChildOrder | IExecutionOrder;
 }
 
 class OrderService {
@@ -145,14 +145,21 @@ class OrderService {
   ChildUpdate!: Observable<IOrderUpdateEvent>;
   ParentAdd!: Observable<IOrderUpdateEvent>;
   ParentUpdate!: Observable<IOrderUpdateEvent>;
+  PositionAdd!: Observable<IOrderUpdateEvent>;
+  PositionUpdate!: Observable<IOrderUpdateEvent>;
+  PositionRemove!: Observable<IOrderUpdateEvent>;
 
   constructor() {
-    this.initObservables();
     this.positionservice = new PositionService2(this.OrderSubject);
+    this.initObservables();
     this.Positions = this.positionservice.Positions;
   }
 
   private initObservables() {
+    this.PositionAdd = this.positionservice.PositionAdd;
+    this.PositionUpdate = this.positionservice.PositionUpdate;
+    this.PositionRemove = this.positionservice.PositionRemove;
+
     this.ExecutionAdd = this.OrderSubject.pipe(
       filter(
         (x) =>
