@@ -46,7 +46,7 @@ export function CreateOrder(props: { view: ViewType }) {
         <CardContent>
           <form className={classes.root}>
 
-            <TextField label="Symbol" value={symbol} variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
+            <TextField disabled label="Symbol" value={symbol} variant="outlined" onChange={(e) => setSymbol(e.target.value)} />
 
             <FormControl variant="outlined">
               <InputLabel >Moniker</InputLabel>

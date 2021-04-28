@@ -20,6 +20,11 @@ export const OrderChartComponent = (props: { parentOrderCount: number, childOrde
     stroke: {
       show: false
     },
+    dataLabels: {
+      formatter: (val, opts) => {
+        return opts.w.config.series[opts.seriesIndex];
+      }
+    },
     labels: ["Parent", "Child", "Executions"],
     plotOptions: {
       pie: {
