@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Divider, FormControl, Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, InputLabel, MenuItem, Typography } from "@material-ui/core";
 import orderService, { IOrderUpdateEvent, IPosition } from '../../services/OrderService';
+import { PositionChartComponent } from './PositionChartComponent'
 
 const getPosValue = (): string => {
   if (!orderService.Positions.length)
@@ -67,14 +68,7 @@ export const SummaryComponent = () => {
         </Grid>
         <Grid item xs={12} sm={4}>
           <Card square elevation={3}>
-            <CardContent>
-              <Typography variant="h6">EXECUTIONS</Typography>
-              <Typography variant="h1">{positionCount}</Typography>
-            </CardContent>
-            <Divider />
-            <CardContent>
-              <Typography variant="subtitle2">Value: $0</Typography>
-            </CardContent>
+            <PositionChartComponent positions={orderService.Positions} positionCount={positionCount} />
           </Card>
         </Grid>
       </Grid>
