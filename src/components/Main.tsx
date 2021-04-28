@@ -8,7 +8,7 @@ import {
 } from "@material-ui/core";
 
 import Color from "color";
-import { Level2DataComponent } from "./Level2DataComponent";
+import { SelectedSecurityChart } from "./SelectedSecurityChart";
 import { CreateOrder } from "./CreateOrder";
 import { SelectSecurityComponent } from "./SelectSecurityComponent";
 import { TopBar } from './TopBar';
@@ -97,7 +97,7 @@ export function Main() {
                     <CreateOrder view={view} />
                   </Grid>
                   <Grid item xs={12}>
-                    <Level2DataComponent />
+                    <SelectedSecurityChart />
                   </Grid>
                 </Grid>
               </Grid>
