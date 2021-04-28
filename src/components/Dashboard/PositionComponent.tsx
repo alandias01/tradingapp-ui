@@ -51,10 +51,18 @@ export function PositionComponent() {
   }, [gridColumnApi, gridApi]);
 
   useEffect(() => {
+    let subscription1: any;
+    let subscription2: any;
+    let subscription3: any;
     if (gridApi) {
-      orderService.PositionAdd.subscribe(() => gridApi?.setRowData(orderService.Positions));
-      orderService.PositionUpdate.subscribe(() => gridApi.refreshCells());
-      orderService.PositionRemove.subscribe(() => gridApi?.setRowData(orderService.Positions));
+      subscription1 = orderService.PositionAdd.subscribe(() => gridApi?.setRowData(orderService.Positions));
+      subscription2 = orderService.PositionUpdate.subscribe(() => gridApi.refreshCells());
+      subscription3 = orderService.PositionRemove.subscribe(() => gridApi?.setRowData(orderService.Positions));
+    }
+    return () => {
+      subscription1?.unsubscribe();
+      subscription2?.unsubscribe();
+      subscription3?.unsubscribe();
     }
 
   }, [gridApi])

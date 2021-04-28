@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { IPosition } from "../../services/OrderService";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { Typography } from "@material-ui/core";
 
-
-export const PositionChartComponent = (props: { positions: IPosition[], positionCount: number }) => {
+export const OrderChartComponent = (props: { parentOrderCount: number, childOrderCount: number, executionOrderCount: number }) => {
   const [options, setOptions] = useState<ApexOptions>({
     chart: {
-      id: "reactchart-example",
+      id: "OrderChartComponent",
       animations: {
         enabled: false
       }
@@ -22,7 +20,7 @@ export const PositionChartComponent = (props: { positions: IPosition[], position
     stroke: {
       show: false
     },
-    labels: [""],
+    labels: ["Parent", "Child", "Executions"],
     plotOptions: {
       pie: {
         donut: {
@@ -30,40 +28,26 @@ export const PositionChartComponent = (props: { positions: IPosition[], position
             show: true,
             value: {
               color: "white"
-            },
-            total: {
-              show: true,
-              showAlways: true,
-              label: "Position Value",
-              color: "white"
             }
           }
         }
-
       }
     }
   });
   const [series, setSeries] = useState<number[]>([1]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setOptions(x => ({ ...x, labels: props.positions?.map(x => x.symbol) }));
-      setSeries(props.positions?.map(x => x.position));
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [])
+    setSeries([props.parentOrderCount, props.childOrderCount, props.executionOrderCount]);
+  }, [props.parentOrderCount, props.childOrderCount, props.executionOrderCount])
 
   return (
     <div>
-      <Typography variant="h6">POSITIONS: {props.positionCount}</Typography>
+      <Typography variant="h6">ORDERS</Typography>
       <Chart
         options={options}
         series={series}
         type="donut"
-      //width={500}
       />
     </div>
   )
-
 }

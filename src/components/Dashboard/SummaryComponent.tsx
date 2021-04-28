@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Grid, Divider, FormControl, Card, CardHeader, CardContent, TextField, makeStyles, createStyles, Theme, Button, Select, InputLabel, MenuItem, Typography } from "@material-ui/core";
 import orderService, { IOrderUpdateEvent, IPosition } from '../../services/OrderService';
 import { PositionChartComponent } from './PositionChartComponent'
+import { OrderChartComponent } from './OrderChartComponent';
 
 const getPosValue = (): string => {
   if (!orderService.Positions.length)
@@ -12,7 +13,6 @@ const getPosValue = (): string => {
 
 export const SummaryComponent = () => {
   const [positionCount, setPositionCount] = useState(orderService.Positions.length);
-  const [positionValue, setPositionValue] = useState(getPosValue());
   const [parentOrderCount, setParentOrderCount] = useState(orderService.ParentOrders.length);
   const [childOrderCount, setChildOrderCount] = useState(orderService.ChildOrders.length);
   const [executionOrderCount, setExecutionOrderCount] = useState(orderService.ExecutionOrders.length);
@@ -42,12 +42,7 @@ export const SummaryComponent = () => {
         <Grid item xs={12} sm={4}>
           <Card square elevation={3}>
             <CardContent>
-              <Typography variant="h6">POSITIONS</Typography>
-              <Typography variant="h1">{positionCount}</Typography>
-            </CardContent>
-            <Divider />
-            <CardContent>
-              <Typography variant="subtitle2">Position value:{positionValue}</Typography>
+              <PositionChartComponent positions={orderService.Positions} positionCount={positionCount} />
             </CardContent>
           </Card>
         </Grid>
@@ -68,7 +63,13 @@ export const SummaryComponent = () => {
         </Grid>
         <Grid item xs={12} sm={4}>
           <Card square elevation={3}>
-            <PositionChartComponent positions={orderService.Positions} positionCount={positionCount} />
+            <CardContent>
+              <OrderChartComponent
+                parentOrderCount={parentOrderCount}
+                childOrderCount={childOrderCount}
+                executionOrderCount={executionOrderCount}
+              />
+            </CardContent>
           </Card>
         </Grid>
       </Grid>
