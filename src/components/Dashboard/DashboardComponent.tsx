@@ -6,6 +6,8 @@ export const DashboardComponent = () => {
   return (
     <div style={{ height: "100%" }}>
       <SummaryComponent />
-      <PositionComponent />
+      <div style={{ height: "50%" }}>
+        <PositionComponent />
+      </div>
     </div >);
 }

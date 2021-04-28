@@ -36,7 +36,8 @@ export function CreateOrder(props: { view: ViewType }) {
     orderService.NewOrder({ moniker, symbol, side, algo, ordType, orderQty, tif });
   };
 
-  const submitEnabled = () => props.view !== ViewType.ORDERS;
+  //const submitEnabled = () => props.view !== ViewType.ORDERS;
+  const submitEnabled = () => false;
 
   return (
     <div>

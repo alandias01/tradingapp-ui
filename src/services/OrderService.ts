@@ -292,16 +292,15 @@ class OrderService {
   }
 
   private addToExecutions(order: IExecutionOrder) {
-    this.ExecutionOrders.push(order);
-
-    const orderEvent: IOrderUpdateEvent = {
-      typeOfOrder: TypeOfOrder.EXECUTION,
-      orderUpdateType: OrderUpdateType.ADD,
-      payload: order,
-    };
-
     this.myPromise = this.myPromise.then(async () => {
       await TaskDelay(300);
+      this.ExecutionOrders.push(order);
+
+      const orderEvent: IOrderUpdateEvent = {
+        typeOfOrder: TypeOfOrder.EXECUTION,
+        orderUpdateType: OrderUpdateType.ADD,
+        payload: order,
+      };
       this.OrderSubject.next(orderEvent);
       this.applyExecutionToChildOrder(order);
       return 1;

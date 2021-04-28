@@ -12,6 +12,9 @@ const getPosValue = (): string => {
 export const SummaryComponent = () => {
   const [positionCount, setPositionCount] = useState(orderService.Positions.length);
   const [positionValue, setPositionValue] = useState(getPosValue());
+  const [parentOrderCount, setParentOrderCount] = useState(orderService.ParentOrders.length);
+  const [childOrderCount, setChildOrderCount] = useState(orderService.ChildOrders.length);
+  const [executionOrderCount, setExecutionOrderCount] = useState(orderService.ExecutionOrders.length);
 
   useEffect(() => {
     orderService.PositionAdd.subscribe(() => {
@@ -19,6 +22,15 @@ export const SummaryComponent = () => {
     });
     orderService.PositionRemove.subscribe(() => {
       setPositionCount(orderService.Positions.length);
+    });
+    orderService.ParentAdd.subscribe(() => {
+      setParentOrderCount(orderService.ParentOrders.length);
+    });
+    orderService.ChildAdd.subscribe(() => {
+      setChildOrderCount(orderService.ChildOrders.length);
+    });
+    orderService.ExecutionAdd.subscribe(() => {
+      setExecutionOrderCount(orderService.ExecutionOrders.length);
     });
   }, [])
 
@@ -41,8 +53,11 @@ export const SummaryComponent = () => {
         <Grid item xs={12} sm={4}>
           <Card square elevation={3}>
             <CardContent>
-              <Typography variant="h6">CHILD ORDERS</Typography>
-              <Typography variant="h1">{positionCount}</Typography>
+              <Typography color="textSecondary" align="right" variant="h6">Parent orders: {parentOrderCount} </Typography>
+              <Divider />
+              <Typography color="textSecondary" align="right" variant="h6">Child orders: {childOrderCount}</Typography>
+              <Divider />
+              <Typography color="textSecondary" align="right" variant="h6">Execution orders: {executionOrderCount}</Typography>
             </CardContent>
             <Divider />
             <CardContent>
