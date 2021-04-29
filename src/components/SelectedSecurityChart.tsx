@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { Typography } from "@material-ui/core";
@@ -40,56 +40,52 @@ export const SelectedSecurityChart = () => {
       // },
 
     },
-    // title: {
-    //   text: 'Stock Price Movement',
-    //   align: 'left'
-    // },
-    // fill: {
-    //   type: 'gradient',
-    //   gradient: {
-    //     shadeIntensity: 1,
-    //     inverseColors: false,
-    //     opacityFrom: 0.5,
-    //     opacityTo: 0,
-    //     stops: [0, 90, 100]
-    //   },
-    // },    
     tooltip: {
       theme: "dark"
     }
   });
 
   const [series, setSeries] = useState([{ name: selectedSecurity.SYMBOL, data: [selectedSecurity.DefaultPrice] }]);
-  const [realtTimeUpdateSnapshot, setRealtTimeUpdateSnapshot] = useState<ISecurityMasterService[]>();
+
+  function reducer(state: ISecurityMasterService, action: { type: string, payload: ISecurityMasterService[] }): ISecurityMasterService {
+    if (action.type === "update") {
+      const securityFound = action.payload.find(r => r.SYMBOL === selectedSecurity.SYMBOL);
+      if (securityFound) {
+        setSeries(x => {
+          const newData = [{
+            name: selectedSecurity.SYMBOL,
+            data: [...x[0].data, realtTimeUpdateSnapshot.DefaultPrice]
+          }];
+          return newData;
+        });
+
+        setOptions(x => {
+          const newOptions = { ...x, yaxis: { min: selectedSecurity.DefaultPrice - 10, max: selectedSecurity.DefaultPrice + 10 } };
+          return newOptions;
+        });
+        return securityFound;
+      }
+    }
+    return { SYMBOL: "AAPL", DefaultPrice: 120 };
+  }
+
+  const [realtTimeUpdateSnapshot, dispatch] = useReducer(reducer, { SYMBOL: selectedSecurity.SYMBOL, DefaultPrice: selectedSecurity.DefaultPrice });
 
   useEffect(() => {
-    realtTimeMarketData.stockPrices.subscribe((s) => setRealtTimeUpdateSnapshot(s));
+    realtTimeMarketData.stockPrices.subscribe((realTimeData) => {
+      dispatch({ type: "update", payload: realTimeData });
+    });
     return () => realtTimeMarketData.stockPrices.unsubscribe();
-  }, [])
-
-  useEffect(() => {
-    const securityFound = realtTimeUpdateSnapshot?.find(s => s.SYMBOL === selectedSecurity.SYMBOL);
-    if (!securityFound)
-      return;
-
-    setSeries(x => {
-      const newData = [{
-        name: selectedSecurity.SYMBOL,
-        data: [...x[0].data, securityFound?.DefaultPrice]
-      }];
-      return newData;
-    });
-
-    setOptions(x => {
-      const newOptions = { ...x, yaxis: { min: selectedSecurity.DefaultPrice - 10, max: selectedSecurity.DefaultPrice + 10 } };
-      return newOptions;
-    });
-
-  }, [realtTimeUpdateSnapshot, selectedSecurity.SYMBOL])
+  }, []);
 
   return (
     <div>
-      <Typography variant="h6">{selectedSecurity.SYMBOL}</Typography>
+      <Typography variant="h6" display="block">{selectedSecurity.SYMBOL} ({selectedSecurity.Description})</Typography>
+      <Typography variant="overline" display="inline" >NasdaqGS - NasdaqGS Real Time</Typography>
+      <br />
+      <Typography variant="h2" display="inline">{realtTimeUpdateSnapshot.DefaultPrice}</Typography>
+      <Typography variant="overline" display="inline" >LIVE</Typography>
+
       <Chart
         options={options}
         series={series}
